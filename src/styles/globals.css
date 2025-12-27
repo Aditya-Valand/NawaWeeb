@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  /* Fonts */
+  --font-clash: 'ClashDisplay', sans-serif;
+  --font-editor: 'Editorial', serif;
+
+  /* Nawaweeb Core Palette */
+  --color-primary: #2D4940;        /* Deep Emerald Green */
+  --color-primary-light: #42665b;
+  --color-primary-dark: #1f332d;
+  
+  --color-accent: #F6E38F;         /* Traditional Gold/Chikankari Highlight */
+  --color-accent-dark: #e0c768;
+
+  /* Requirements: Silver & Off-white */
+  --color-silver: #C0C0C0;         /* Silver highlights for anime aesthetic */
+  --color-silver-light: #E5E7EB;
+  
+  --color-text-dark: #1A1A1A;
+  --color-bg-light: #F5F5F5;       /* Off-white background */
+}
+
+/* Font Faces */
+@font-face {
+  font-family: 'ClashDisplay';
+  src: url('/public/fonts/ClashDisplay-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'ClashDisplay';
+  src: url('/public/fonts/ClashDisplay-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Editorial';
+  src: url('/public/fonts/PPEditorialNew-Regular-BF644b214ff145f.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Base Styles */
+body {
+  background-color: var(--color-bg-light);
+  color: var(--color-text-dark);
+  font-family: var(--font-clash);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Selection color for that Emerald vibe */
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-accent);
+}

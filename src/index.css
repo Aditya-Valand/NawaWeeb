@@ -1,0 +1,45 @@
+/* Tailwind v4 base import */
+@import "tailwindcss";
+
+/* ------------------------------
+   Global Light Theme Setup
+-------------------------------- */
+:root {
+  --bg: #fafafa;           /* soft canvas white */
+  --text: #111827;         /* slate/near-black for luxury feel */
+  --subtext: #6b7280;      /* muted grey */
+  --card: #ffffff;         /* product cards */
+  --radius: 18px;          /* rounded softness */
+  --shadow-soft: 0 10px 30px rgba(0,0,0,0.06);
+  --shadow-card: 0 15px 40px rgba(0,0,0,0.07);
+}
+
+/* Base reset */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  scroll-behavior: smooth;
+}
+
+/* No horizontal scroll issues */
+body { overflow-x: hidden; }
+
+/* Clean text rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar minimal */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb {
+  background: #cfcfcf;
+  border-radius: 999px;
+}
+
+/* Utility helpers */
+.container-base { @apply max-w-337.5 w-full mx-auto px-6; }
+.section { @apply py-16 md:py-24; }
