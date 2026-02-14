@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import {
   PackagePlus,
@@ -10,8 +9,143 @@ import {
   Edit3,
   RefreshCw,
   Layers,
+  Plus,
+  Save,
+  Box
 } from "lucide-react";
 
+// ==========================================
+// 🧩 SUB-COMPONENT: VARIANT MANAGER
+// ==========================================
+const VariantManager = ({ variants, setVariants, basePrice }) => {
+  const addVariant = () => {
+    setVariants([
+      ...variants,
+      { 
+        size: "M", 
+        type: "Ready-made", 
+        stock: 0, 
+        price: basePrice || 0 
+      }
+    ]);
+  };
+
+  const removeVariant = (index) => {
+    setVariants(variants.filter((_, i) => i !== index));
+  };
+
+  const updateVariant = (index, field, value) => {
+    const updated = [...variants];
+    updated[index][field] = value;
+    setVariants(updated);
+  };
+
+  return (
+    <div className="space-y-4 pt-4">
+      {/* HEADER & ADD BUTTON */}
+      <div className="flex justify-between items-end border-b border-primary/5 pb-2">
+        <label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">
+          Inventory Configuration
+        </label>
+        <button
+          type="button"
+          onClick={addVariant}
+          className="text-xs bg-primary text-accent px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-lg shadow-primary/20"
+        >
+          <Plus size={14} strokeWidth={3} /> Add Variant
+        </button>
+      </div>
+
+      {/* THE TABLE HEADER */}
+      <div className="grid grid-cols-12 gap-4 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-primary/30">
+        <div className="col-span-2">Size</div>
+        <div className="col-span-4">Type</div>
+        <div className="col-span-3">Stock</div>
+        <div className="col-span-2">Price (₹)</div>
+        <div className="col-span-1"></div>
+      </div>
+
+      {/* THE ROWS */}
+      <div className="space-y-3">
+        {variants.length === 0 && (
+          <div className="p-8 border-2 border-dashed border-primary/10 rounded-2xl text-center">
+            <p className="text-primary/40 font-bold text-sm">No inventory added yet.</p>
+            <p className="text-primary/20 text-xs mt-1">Click "Add Variant" to start.</p>
+          </div>
+        )}
+        
+        {variants.map((variant, index) => (
+          <div 
+            key={index} 
+            className="grid grid-cols-12 gap-4 items-center bg-bg-light p-3 rounded-2xl border border-transparent hover:border-primary/10 transition-all group"
+          >
+            {/* Size */}
+            <div className="col-span-2">
+              <select
+                value={variant.size}
+                onChange={(e) => updateVariant(index, "size", e.target.value)}
+                className="w-full bg-white p-3 rounded-xl text-sm font-bold text-primary outline-none focus:ring-2 ring-accent shadow-sm"
+              >
+                {["XS", "S", "M", "L", "XL", "XXL"].map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Type */}
+            <div className="col-span-4">
+              <select
+                value={variant.type}
+                onChange={(e) => updateVariant(index, "type", e.target.value)}
+                className="w-full bg-white p-3 rounded-xl text-sm font-bold text-primary outline-none focus:ring-2 ring-accent shadow-sm"
+              >
+                <option value="Ready-made">Ready-made</option>
+                <option value="Handmade">Handmade</option>
+              </select>
+            </div>
+
+            {/* Stock */}
+            <div className="col-span-3">
+              <input
+                type="number"
+                value={variant.stock}
+                placeholder="0"
+                onChange={(e) => updateVariant(index, "stock", Number(e.target.value))}
+                className="w-full bg-white p-3 rounded-xl text-sm font-bold text-primary outline-none focus:ring-2 ring-accent shadow-sm"
+              />
+            </div>
+
+            {/* Price Override */}
+            <div className="col-span-2 relative">
+               <input
+                type="number"
+                value={variant.price}
+                onChange={(e) => updateVariant(index, "price", Number(e.target.value))}
+                className="w-full bg-white p-3 rounded-xl text-sm font-bold text-primary outline-none focus:ring-2 ring-accent shadow-sm pl-6"
+              />
+               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/30 text-xs font-bold">₹</span>
+            </div>
+
+            {/* Delete */}
+            <div className="col-span-1 flex justify-end">
+              <button
+                type="button"
+                onClick={() => removeVariant(index)}
+                className="p-2 text-primary/20 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// 🚀 MAIN COMPONENT
+// ==========================================
 export default function ProductManager() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -21,56 +155,50 @@ export default function ProductManager() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
 
+  // 📦 STATE
   const [formData, setFormData] = useState({
-    title: "", // Updated to match your backend 'title' requirement
-    animeTag: "",
-    series: "",
-    priceReady: "",
-    priceHandmade: "",
+    title: "",
+    collection: "", 
+    tags: "",       
     images: [],
     description: "",
     fullDescription: "",
     isLimited: false,
-    active: true, // Boolean (Listed/Unlisted)
-    stock: 0,
+    active: true,
+    basePrice: "", 
   });
-const uploadToCloudinary = async (file) => {
-  const data = new FormData();
-  data.append("file", file);
-  data.append("upload_preset", "nawaweeb");
-  data.append("cloud_name", "dmvzs4yy3");
 
-  try {
-    const res = await fetch("https://api.cloudinary.com/v1_1/dmvzs4yy3/image/upload", {
-      method: "POST",
-      body: data
-    });
+  const [variants, setVariants] = useState([
+    { size: "M", type: "Ready-made", stock: 10, price: 0 }
+  ]);
 
-    if (!res.ok) {
-      const errorData = await res.json();
-      // This will tell you EXACTLY why Cloudinary is rejecting you in the console
-      console.error("Cloudinary Detailed Error:", errorData);
-      throw new Error("Cloudinary Upload Failed"); 
+  // --- CLOUDINARY LOGIC (Kept exactly the same) ---
+  const uploadToCloudinary = async (file) => {
+    const data = new FormData();
+    data.append("file", file);
+    data.append("upload_preset", "nawaweeb");
+    data.append("cloud_name", "dmvzs4yy3");
+    try {
+      const res = await fetch("https://api.cloudinary.com/v1_1/dmvzs4yy3/image/upload", {
+        method: "POST",
+        body: data
+      });
+      if (!res.ok) throw new Error("Cloudinary Upload Failed");
+      const json = await res.json();
+      return json.secure_url;
+    } catch (err) {
+      console.error("Cloudinary Error:", err);
+      return null;
     }
+  };
 
-    const json = await res.json();
-    return json.secure_url;
-  } catch (err) {
-    console.error("Cloudinary Error:", err);
-    return null; 
-  }
-};
-
-  // 1. Fetch Inventory
+  // 1. Fetch Inventory (Aligned with Controller Response)
   const fetchInventory = async () => {
     setFetching(true);
     try {
       const res = await axios.get("http://localhost:5000/api/products");
-
-      console.log("RAW RESPONSE:", res.data);
-      console.log("PRODUCT ARRAY:", res.data.data.products);
-
-      setProducts(res.data.data.products);
+      // Controller returns { success: true, data: { products: [] } }
+      setProducts(res.data.data?.products || []);
     } catch (err) {
       console.error("Failed to fetch inventory:", err);
     } finally {
@@ -78,171 +206,181 @@ const uploadToCloudinary = async (file) => {
     }
   };
 
-  useEffect(() => {
-    console.log("STATE products:", products);
-  }, [products]);
-
+  // 2. Fetch Single Product (Aligned with Controller Response)
   const fetchSingleProduct = async (productId) => {
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/products/${productId}`,
-      );
-
+      const res = await axios.get(`http://localhost:5000/api/products/${productId}`);
       const product = res.data.data.product;
 
-      setEditingId(product._id);
+      setEditingId(product.id);
+      
       setFormData({
         title: product.title || "",
-        animeTag: product.animeTag || "",
-        series: product.series || "",
-        priceReady: product.priceReady || "",
-        priceHandmade: product.priceHandmade || "",
-        images: (product.images || []).filter((img) => img !== null),
+        
+        // 1. COLLECTION
+        collection: product.collection || "", 
+        
+        // 2. TAGS (Convert Array ["Anime", "Cool"] -> String "Anime, Cool")
+        tags: product.tags ? product.tags.join(", ") : "", 
+        
+        images: product.images || [],
         description: product.description || "",
-        fullDescription: product.fullDescription || "",
-        isLimited: product.isLimited || false,
-        active: product.active ?? true,
-        stock: product.stock || 0,
+        
+        // 3. FULL DESCRIPTION (Map from DB name 'full_description')
+        fullDescription: product.full_description || "", 
+        
+        // 4. LIMITED EDITION (Map from DB name 'is_limited_edition')
+        isLimited: product.is_limited_edition || false, 
+        
+        active: product.is_active ?? true,
+        basePrice: product.price || "", 
       });
+
+      // Populate Variants
+      if (product.product_variants) {
+        setVariants(product.product_variants.map(v => ({
+          id: v.id,
+          size: v.size,
+          type: v.type || 'Ready-made',
+          stock: v.stock_quantity,     
+          price: v.price || 0 
+        })));
+      }
     } catch (err) {
       console.error("Failed to load product", err);
-      alert("Product not found");
     }
   };
-
   useEffect(() => {
+    fetchInventory();
+    
+    // If the URL has an ID, fetch that specific product
     if (id) {
       fetchSingleProduct(id);
+    } else {
+      // If URL has no ID (just /admin/products), clear the form
+      setEditingId(null);
+      setFormData({
+        title: "", collection: "", tags: "", basePrice: "", 
+        images: [], description: "", fullDescription: "", 
+        isLimited: false, active: true 
+      });
+      setVariants([{ size: "M", type: "Ready-made", stock: 0, price: 0 }]);
     }
-  }, [id]);
+  }, [id]); // <--- Dependency on [id] is CRITICAL
+  const handleBasePriceChange = (val) => {
+    setFormData({ ...formData, basePrice: val });
+  };
+  // 4. Submit (Aligned with Controller Expected Body)
+ const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-  // 2. Pricing Logic
-  const handlePriceChange = (val) => {
-    const ready = Number(val);
-    setFormData({
-      ...formData,
-      priceReady: ready,
-      priceHandmade: Math.floor(ready * 1.3), // Automatic +30% Craftsmanship Markup
-    });
+    try {
+      // 1. 🛡️ GET THE TOKEN (Critical Fix)
+      // Assuming you store it in localStorage after login. 
+      // If you use Supabase Auth directly, use: (await supabase.auth.getSession()).data.session.access_token
+      const token = localStorage.getItem("token"); 
+
+      if (!token) {
+        alert("You are not logged in or your session expired. Please login again.");
+        return; // Stop execution if no token
+      }
+
+      // 2. Image Upload Logic (Kept same)
+      const oldImages = formData.images.filter(img => typeof img === "string");
+      const newImageObjects = formData.images.filter(img => img && typeof img === "object" && img.file);
+      const uploadedResults = await Promise.all(newImageObjects.map(img => uploadToCloudinary(img.file)));
+      const finalImages = [...oldImages, ...uploadedResults.filter(url => url !== null)];
+
+      if (finalImages.length === 0 && newImageObjects.length > 0) {
+        throw new Error("Image upload failed.");
+      }
+
+      const generatedSlug = formData.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+
+      const payload = {
+        title: formData.title,
+        slug: generatedSlug,
+        price: Number(formData.basePrice),
+        images: finalImages,
+        description: formData.description,
+        is_active: formData.active,
+        collection: formData.collection,
+        tags: formData.tags.split(",").map(t => t.trim()),
+        full_description: formData.fullDescription,
+        is_limited_edition: formData.isLimited,
+        variants: variants.map(v => ({
+          id: v.id,
+          size: v.size,
+          type: v.type,
+          stock_quantity: Number(v.stock),
+          price_override: Number(v.price)
+        }))
+      };
+
+      const url = editingId 
+        ? `http://localhost:5000/api/products/${editingId}` 
+        : "http://localhost:5000/api/products";
+
+      const method = editingId ? 'put' : 'post';
+
+      // 3. 🚀 SEND REQUEST WITH HEADERS (Uncommented & Fixed)
+      await axios({
+        method: method,
+        url: url,
+        data: payload,
+        headers: { 
+            Authorization: `Bearer ${token}` // <--- THIS WAS MISSING
+        } 
+      });
+
+      alert("Artifact Manifested! ⛩️");
+      
+      setFormData({ 
+        title: "", collection: "", tags: "", basePrice: "", 
+        images: [], description: "", fullDescription: "", 
+        isLimited: false, active: true 
+      });
+      setVariants([{ size: "M", type: "Ready-made", stock: 0, price: 0 }]);
+      setEditingId(null);
+      fetchInventory();
+      navigate("/admin/products");
+
+    } catch (err) {
+      console.error("Submission Error:", err);
+      const msg = err.response?.data?.message || err.message || "Failed to save artifact.";
+      alert(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // 3. Delete Artifact
-  const handleDelete = async (id) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this artifact from the Clan?",
-      )
-    ) {
+  const handleDelete = async (productId) => {
+    if (confirm("Delete this artifact?")) {
       try {
+        // 1. Get the token (Critical Step!)
         const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:5000/api/products/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+
+        // 2. Send request with Headers
+        await axios.delete(`http://localhost:5000/api/products/${productId}`, {
+          headers: { Authorization: `Bearer ${token}` } // <--- This was missing
         });
-        fetchInventory();
+
+        alert("Artifact Deleted 🗑️");
+        fetchInventory(); // Refresh the list
       } catch (err) {
+        console.error("Delete failed:", err);
         alert("Failed to delete product");
       }
     }
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-
-  //   const token = localStorage.getItem("token");
-  //   const data = new FormData();
-
-  //   Object.keys(formData).forEach((key) => {
-  //     if (key !== "images") data.append(key, formData[key]);
-  //   });
-
-  //   formData.images.forEach((img) => {
-  //     if (img.file) data.append("images", img.file);
-  //   });
-
-  //   try {
-  //     if (editingId) {
-  //       await axios.patch(
-  //         `http://localhost:5000/api/products/${editingId}`,
-  //         data,
-  //         { headers: { Authorization: `Bearer ${token}` } },
-  //       );
-  //       alert("Artifact updated ⚔️");
-  //     } else {
-  //       await axios.post("http://localhost:5000/api/products/add", data, {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
-  //       alert("Artifact manifested ⛩️");
-  //     }
-
-  //     setEditingId(null);
-  //     fetchInventory();
-  //   } catch (err) {
-  //     alert(err.response?.data?.message || "Upload failed");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-
-  try {
-    const token = localStorage.getItem("token");
-
-    // 1. Separate strings (old URLs) from objects (new files)
-    const oldImages = formData.images.filter(img => typeof img === "string");
-    const newImageObjects = formData.images.filter(img => img && typeof img === "object" && img.file);
-
-    // 2. Upload and wait for results
-    const uploadedResults = await Promise.all(
-      newImageObjects.map(img => uploadToCloudinary(img.file))
-    );
-
-    // 3. 🛡️ FILTER out nulls immediately to prevent saving bad data
-    const successfullyUploaded = uploadedResults.filter(url => url !== null);
-    const finalImages = [...oldImages, ...successfullyUploaded];
-
-    // 4. CHECK: If Cloudinary failed for all new images and no old ones exist
-    if (finalImages.length === 0) {
-      throw new Error("Cloudinary upload failed for all images. Please check your preset/connection.");
-    }
-
-    const payload = {
-      ...formData,
-      images: finalImages,
-      stock: Number(formData.stock)
-    };
-
-    const url = editingId 
-      ? `http://localhost:5000/api/products/${editingId}` 
-      : "http://localhost:5000/api/products/add";
-
-    await axios({
-      method: editingId ? 'patch' : 'post',
-      url: url,
-      data: payload,
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    alert("Artifact Manifested! ⛩️");
-    fetchInventory();
-    navigate("/admin/products");
-    
-    // Reset form after success
-    setFormData({ title: "", animeTag: "", series: "", priceReady: "", priceHandmade: "", images: [], description: "", fullDescription: "", isLimited: false, active: true, stock: 0 });
-    setEditingId(null);
-
-  } catch (err) {
-    console.error("Submission Error:", err);
-    alert(err.message || "Failed to save artifact.");
-  } finally {
-    setLoading(false);
-  }
-};
+  // ==========================================
+  // UI RENDER (UNCHANGED)
+  // ==========================================
   return (
-    <div className="space-y-16">
-      {/* SECTION 1: MANIFEST FORM */}
+    <div className="space-y-16 pb-20">
+      {/* HEADER */}
       <div className="space-y-10">
         <header className="flex justify-between items-center">
           <div>
@@ -255,350 +393,181 @@ const uploadToCloudinary = async (file) => {
           </div>
         </header>
 
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-8"
-        >
-          <div className="lg:col-span-2 space-y-6 bg-white p-8 rounded-[2.5rem] border border-emerald-100 shadow-sm">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* LEFT COLUMN: MAIN CONTENT */}
+          <div className="lg:col-span-2 space-y-8 bg-white p-8 rounded-[2.5rem] border border-emerald-100 shadow-sm">
+            
+            {/* 1. Basic Info */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">Artifact Title</label>
+              <input
+                type="text"
+                required
+                className="w-full p-4 bg-bg-light rounded-2xl border-none focus:ring-2 ring-accent font-clash font-bold text-lg"
+                placeholder="e.g., Akatsuki Cloud Tee"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">
-                  Artifact Title
-                </label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">Collection</label>
                 <input
                   type="text"
                   required
                   className="w-full p-4 bg-bg-light rounded-2xl border-none focus:ring-2 ring-accent font-clash font-bold"
-                  placeholder="e.g., Akatsuki Cloud Tee"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
+                  placeholder="e.g., Winter Arc"
+                  value={formData.collection}
+                  onChange={(e) => setFormData({ ...formData, collection: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">
-                  Anime Tag / Collection
-                </label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">Tags</label>
                 <input
                   type="text"
-                  required
                   className="w-full p-4 bg-bg-light rounded-2xl border-none focus:ring-2 ring-accent font-clash font-bold"
-                  placeholder="e.g., Uchiha / Winter Drop"
-                  value={formData.animeTag}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      animeTag: e.target.value,
-                      series: "Clan Drop",
-                    })
-                  }
+                  placeholder="e.g., Uchiha, Oversized"
+                  value={formData.tags}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              {/* Stock Input */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">
-                  Inventory Stock
-                </label>
-                <input
-                  type="number"
-                  className="w-full p-4 bg-bg-light rounded-2xl border-none focus:ring-2 ring-accent font-clash font-bold"
-                  placeholder="0"
-                  value={formData.stock}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stock: Number(e.target.value) })
-                  }
-                />
-              </div>
 
-              {/* Status Toggles */}
-              <div className="flex items-center gap-6 pt-8">
-                {/* <label className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    className="hidden"
-                    checked={formData.active}
-                    onChange={(e) =>
-                      setFormData({ ...formData, active: e.target.checked })
-                    }
-                  />
-                  <div
-                    className={`w-12 h-6 rounded-full p-1 transition-colors ${formData.active ? "bg-emerald-500" : "bg-gray-300"}`}
-                  >
-                    <div
-                      className={`bg-white w-4 h-4 rounded-full transition-transform ${formData.active ? "translate-x-6" : "translate-x-0"}`}
-                    />
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                    Listed
-                  </span>
-                </label> */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFormData({ ...formData, active: !formData.active })
-                  }
-                  className={`flex-1 py-4 rounded-2xl font-bold text-[10px] uppercase transition-all ${formData.active ? "bg-emerald-500 text-white" : "bg-gray-200 text-gray-400"}`}
-                >
-                  {formData.active ? "Listed" : "Unlisted"}
-                </button>
-
-                {/* <label className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    className="hidden"
-                    checked={formData.isLimited}
-                    onChange={(e) =>
-                      setFormData({ ...formData, isLimited: e.target.checked })
-                    }
-                  />
-                  <div
-                    className={`w-12 h-6 rounded-full p-1 transition-colors ${formData.isLimited ? "bg-amber-500" : "bg-gray-300"}`}
-                  >
-                    <div
-                      className={`bg-white w-4 h-4 rounded-full transition-transform ${formData.isLimited ? "translate-x-6" : "translate-x-0"}`}
-                    />
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                    Limited
-                  </span>
-                </label> */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFormData({ ...formData, isLimited: !formData.isLimited })
-                  }
-                  className={`flex-1 py-4 rounded-2xl font-bold text-[10px] uppercase transition-all ${formData.isLimited ? "bg-amber-500 text-white" : "bg-gray-200 text-gray-400"}`}
-                >
-                  {formData.isLimited ? "Limited Drop" : "Standard"}
-                </button>
-              </div>
-            </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">
-                Short Description
-              </label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">Short Description</label>
               <input
                 type="text"
                 required
                 className="w-full p-4 bg-bg-light rounded-2xl border-none focus:ring-2 ring-accent font-editor italic"
-                placeholder="Hand-stitched floral energy..."
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">
-                Full Specifications
-              </label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-primary/40 ml-2">Full Specifications</label>
               <textarea
-                rows="4"
-                required
+                rows="3"
                 className="w-full p-4 bg-bg-light rounded-2xl border-none focus:ring-2 ring-accent font-editor italic text-sm"
-                placeholder="Detail the fabric, embroidery hours, and anime references..."
                 value={formData.fullDescription}
-                onChange={(e) =>
-                  setFormData({ ...formData, fullDescription: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, fullDescription: e.target.value })}
               />
+            </div>
+
+            {/* 2. VARIANT MANAGER */}
+            <hr className="border-primary/5" />
+            <VariantManager 
+              variants={variants} 
+              setVariants={setVariants} 
+              basePrice={formData.basePrice} 
+            />
+            
+            {/* 3. Toggles */}
+            <div className="flex gap-4 pt-4">
+               <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, active: !formData.active })}
+                  className={`flex-1 py-4 rounded-2xl font-bold text-[10px] uppercase transition-all ${formData.active ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200" : "bg-gray-100 text-gray-400"}`}
+                >
+                  {formData.active ? "Status: Active" : "Status: Hidden"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, isLimited: !formData.isLimited })}
+                  className={`flex-1 py-4 rounded-2xl font-bold text-[10px] uppercase transition-all ${formData.isLimited ? "bg-amber-500 text-white shadow-lg shadow-amber-200" : "bg-gray-100 text-gray-400"}`}
+                >
+                  {formData.isLimited ? "Limited Edition" : "Standard Drop"}
+                </button>
             </div>
           </div>
 
+          {/* RIGHT COLUMN: SIDEBAR */}
           <div className="space-y-6">
+            
+            {/* Base Price Card */}
             <div className="bg-primary p-8 rounded-[2.5rem] text-white shadow-xl">
               <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-accent mb-6">
                 <IndianRupee size={14} /> Pricing Logic
               </h4>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-[10px] text-white/40 uppercase mb-2">
-                    Base Price
-                  </p>
-                  <input
-                    type="number"
-                    value={formData.priceReady}
-                    required
-                    className="w-full bg-white/10 border border-white/10 rounded-xl p-3 font-clash font-bold focus:outline-none focus:ring-1 ring-accent"
-                    onChange={(e) => handlePriceChange(e.target.value)}
-                  />
-                </div>
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                  <p className="text-[10px] text-accent font-bold uppercase mb-1">
-                    Handmade Calc
-                  </p>
-                  <p className="text-3xl font-black">
-                    ₹{formData.priceHandmade || 0}
-                  </p>
-                </div>
+              <div className="space-y-2">
+                <label className="text-[10px] text-white/40 uppercase">Base Price (Default)</label>
+                <input
+                  type="number"
+                  value={formData.basePrice}
+                  required
+                  placeholder="0"
+                  className="w-full bg-white/10 border border-white/10 rounded-xl p-4 font-clash font-bold focus:outline-none focus:ring-1 ring-accent text-3xl"
+                  onChange={(e) => handleBasePriceChange(e.target.value)}
+                />
               </div>
             </div>
 
+            {/* Image Upload */}
             <div className="bg-white p-6 rounded-[2.5rem] border border-emerald-100">
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                {formData.images?.map((img, index) => {
-                  // 🛡️ CRITICAL FIX: Skip nulls and determine source
-                  if (!img) return null;
-                  const src = typeof img === "string" ? img : img.preview;
-
-                  return (
-                    <div
-                      key={index}
-                      className="relative aspect-square rounded-2xl overflow-hidden border group"
-                    >
-                      <img
-                        src={src}
-                        className="w-full h-full object-cover"
-                        alt=""
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            images: prev.images.filter((_, i) => i !== index),
-                          }));
-                        }}
-                        className="absolute top-1 right-1 bg-black/70 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  );
-                })}
-                {/* Upload Box */}
-                <label className="aspect-square border-2 border-dashed border-primary/20 rounded-2xl flex items-center justify-center cursor-pointer hover:bg-bg-light">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files);
-
-                      const mapped = files.map((file) => ({
-                        file,
-                        preview: URL.createObjectURL(file),
-                      }));
-
-                      setFormData({
-                        ...formData,
-                        images: [...(formData.images || []), ...mapped],
-                      });
-                    }}
-                  />
-                  <ImageIcon className="text-primary/30" size={26} />
-                </label>
-              </div>
-
-              <p className="text-[10px] text-primary/40 font-bold uppercase tracking-widest text-center">
-                Upload up to 6 product images
-              </p>
+               <div className="grid grid-cols-3 gap-3 mb-4">
+                  {formData.images?.map((img, index) => {
+                    if (!img) return null;
+                    const src = typeof img === "string" ? img : img.preview;
+                    return (
+                      <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border group">
+                        <img src={src} className="w-full h-full object-cover" alt="" />
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }))}
+                          className="absolute top-1 right-1 bg-black/70 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100"
+                        >✕</button>
+                      </div>
+                    );
+                  })}
+                  <label className="aspect-square border-2 border-dashed border-primary/20 rounded-2xl flex items-center justify-center cursor-pointer hover:bg-bg-light transition-colors">
+                    <input
+                      type="file" multiple accept="image/*" hidden
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files).map(file => ({ file, preview: URL.createObjectURL(file) }));
+                        setFormData({ ...formData, images: [...formData.images, ...files] });
+                      }}
+                    />
+                    <ImageIcon className="text-primary/30" size={26} />
+                  </label>
+               </div>
             </div>
 
             <button
               disabled={loading}
               className="w-full py-6 bg-primary text-accent rounded-full font-black text-xl uppercase tracking-widest shadow-2xl hover:scale-[1.02] transition-all flex items-center justify-center gap-3"
             >
-              {loading
-                ? "Manifesting..."
-                : editingId
-                  ? "Update Artifact"
-                  : "Manifest Drop"}
+              {loading ? <RefreshCw className="animate-spin" /> : <Save />}
+              {editingId ? "Update Artifact" : "Manifest Drop"}
             </button>
           </div>
         </form>
       </div>
 
-      {/* SECTION 2: INVENTORY LIST */}
-      <div className="space-y-8">
-        <div className="flex justify-between items-end">
-          <h3 className="text-2xl font-black text-primary uppercase flex items-center gap-3">
-            <Layers className="text-accent-dark" /> Active Inventory
-            <span className="text-xs bg-accent text-primary px-3 py-1 rounded-full">
-              {products.length}
-            </span>
-          </h3>
-          <button
-            onClick={fetchInventory}
-            className="p-2 text-primary/40 hover:text-primary transition-colors"
-          >
-            <RefreshCw size={18} className={fetching ? "animate-spin" : ""} />
-          </button>
-        </div>
-
+      {/* INVENTORY LIST */}
+      <div className="space-y-6 pt-10 border-t border-primary/5">
+        <h3 className="text-2xl font-black text-primary uppercase flex items-center gap-3">
+          <Layers className="text-accent-dark" /> Active Inventory
+        </h3>
         <div className="grid grid-cols-1 gap-4">
-          {fetching ? (
-            <div className="p-20 text-center font-editor italic text-primary/20">
-              Accessing scrolls...
-            </div>
-          ) : (
-            products.map((product) => (
-              <div
-                key={product._id}
-                className="bg-white p-6 rounded-3xl border border-emerald-100 flex items-center justify-between group hover:shadow-xl hover:shadow-primary/5 transition-all"
-              >
-                <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-bg-light border border-primary/5">
-                    <img
-                      src={product.images?.[0]}
-                      className="w-full h-full object-cover"
-                      alt={product.title}
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-black text-primary uppercase text-lg leading-tight">
-                      {product.title}
-                    </h4>
-                    <p className="text-[10px] font-bold text-accent-dark uppercase tracking-widest">
-                      {product.animeTag}
-                    </p>
-                    {product.isLimited && (
-                      <span className="text-[8px] bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full font-bold uppercase">
-                        Limited
-                      </span>
-                    )}
-                    {!product.active && (
-                      <span className="text-[8px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold uppercase">
-                        Unlisted
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[9px] font-bold text-primary/40 mt-1 uppercase">
-                    Stock: {product.stock}
-                  </p>
+           {products.map((product) => (
+             <div key={product.id} className="bg-white p-4 rounded-3xl border border-emerald-100 flex items-center justify-between group">
+                <div className="flex items-center gap-4">
+                   <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden">
+                      <img src={product.images?.[0]} className="w-full h-full object-cover" />
+                   </div>
+                   <div>
+                      <h4 className="font-bold text-primary">{product.title}</h4>
+                      <p className="text-xs text-primary/50">{product.collection}</p>
+                   </div>
                 </div>
-
-                <div className="flex items-center gap-8">
-                  <div className="text-right">
-                    <p className="text-[9px] text-primary/40 uppercase font-bold">
-                      Base Price
-                    </p>
-                    <p className="font-black text-primary">
-                      ₹{product.priceReady}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => navigate(`/admin/products/${product._id}`)}
-                    >
-                      <Edit3 size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(product._id)}
-                      className="p-3 bg-red-50 text-red-400 hover:bg-red-500 hover:text-white rounded-xl transition-all"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
+                <div className="flex gap-2">
+                   <button onClick={() => navigate(`/admin/products/${product.id}`)} className="p-2 hover:bg-gray-100 rounded-lg"><Edit3 size={16}/></button>
+                   <button onClick={() => handleDelete(product.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 size={16}/></button>
                 </div>
-              </div>
-            ))
-          )}
+             </div>
+           ))}
         </div>
       </div>
     </div>

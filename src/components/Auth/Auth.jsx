@@ -26,19 +26,16 @@ export default function Auth() {
 
     const payload = isLogin
       ? { email, password }
-      : { name, email, password };
+      : { email, password, full_name: name };
 
     const response = await axios.post(url, payload);
 
-    if (response.data.status === "success") {
+    if (response.data.success === true) {
       // 🛡️ Log in via Context to update the whole app state
-      // Ensure we pass the actual user object (res.data.data.user or similar)
-      const userData = response.data.data?.user || { 
-        name: response.data.userName || name, 
-        role: response.data.role || "user" 
-      };
+      // Extract user data from Supabase response
+      const userData = response.data.data.user;
       
-      login(userData, response.data.token);
+      login(userData, response.data.data.token);
 
       // Handle Redirects
       const savedRedirect = sessionStorage.getItem("redirectAfterAuth");
@@ -51,7 +48,7 @@ export default function Auth() {
       }
     }
   } catch (err) {
-    // This will now catch the 500 error and show the message from your backend
+    // This will now catch errors and show the message from your Supabase backend
     alert(err.response?.data?.message || "Syndicate authentication failed.");
   }
 };  
