@@ -1,84 +1,110 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, X, Zap, Heart, Info, AlertCircle } from "lucide-react";
+import { motion } from "framer-motion";
+import { Zap, Heart } from "lucide-react";
+import axios from "axios";
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
-  // const [isExpanded, setIsExpanded] = useState(false);
-  // Track which version the user is looking at
-  const [isHandmadeSelected, setIsHandmadeSelected] = useState(true);
 
-  // 🛡️ Guard against hidden/inactive products
-  if (!product.active) return null;
+  if (!product.is_active) return null;
+
+  const totalStock = product.product_variants?.reduce((sum, v) => sum + (v.stock_quantity || 0), 0) || 0;
+  const isSoldOut = totalStock === 0;
+
+  const toggleWishlist = async (e) => {
+    e.stopPropagation(); // Prevent navigating to product page
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/auth");
+        return;
+      }
+      await axios.post("http://localhost:5000/api/user/togglewish",
+        { productId: product.id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Optional: Add toast notification or local state update if needed
+      // For now, we rely on the user checking the wishlist
+      alert("Wishlist updated!");
+    } catch (err) {
+      console.error("Wishlist error", err);
+    }
+  };
 
   return (
-    <div className="relative">
-      <motion.div
-        layout
-        onClick={() => navigate(`/product/${product._id}`)}
-        className="group relative bg-white rounded-4xl overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-500 border border-primary/5"
-      >
-        {/* VIBRANT BADGES */}
-        <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
-          <span className="bg-[#FFD700] text-black text-[10px] font-clash font-black px-3 py-1 rounded-full shadow-lg -rotate-2 group-hover:rotate-0 transition-transform">
-            {product.animeTag}
-          </span>
-          {product.isLimited && (
-            <span className="bg-primary text-accent text-[10px] font-clash font-bold px-3 py-1 rounded-full shadow-lg rotate-3 group-hover:rotate-0 transition-transform">
-              LIMITED DROP
+    <motion.div
+      layout
+      className="group relative cursor-pointer"
+      onClick={() => navigate(`/product/${product.id}`)}
+    >
+      {/* 1. IMAGE CONTAINER (Standard 3:4 Aspect Ratio) */}
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-gray-100 border border-primary/5">
+
+        {/* Main Image */}
+        <motion.img
+          whileHover={{ scale: 1.05 }}
+          transition={{ duration: 0.5 }}
+          src={product.images?.[0]}
+          alt={product.title}
+          className={`w-full h-full object-cover ${isSoldOut ? 'grayscale opacity-70' : ''}`}
+        />
+
+        {/* Overlay Badges */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+          {product.is_limited_edition && (
+            <span className="bg-primary text-accent text-[8px] font-clash font-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wider">
+              Limited
             </span>
           )}
-          {product.stock <= 5 && product.stock > 0 && (
-            <span className="bg-red-500 text-white text-[8px] font-clash font-bold px-2 py-0.5 rounded-full animate-pulse">
-              ONLY {product.stock} LEFT
+          {totalStock <= 5 && !isSoldOut && (
+            <span className="bg-red-500 text-white text-[8px] font-clash font-bold px-2 py-0.5 rounded-md animate-pulse">
+              Low Stock
             </span>
           )}
         </div>
 
-        {/* IMAGE CONTAINER */}
-        <div className="aspect-3/4 overflow-hidden bg-gray-100 relative">
-          <motion.img
-            whileHover={{ scale: 1.05 }}
-            /* Use the first image from the array defined in your schema */
-            src={product.images?.[0]}
-            alt={product.title}
-            className={`w-full h-full object-cover ${product.stock === 0 ? 'grayscale opacity-50' : ''}`}
-          />
-          
-          {product.stock === 0 && (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <span className="text-white font-clash font-black text-2xl uppercase tracking-tighter -rotate-12 border-4 border-white px-4 py-1">Sold Out</span>
-            </div>
-          )}
-
-          <button className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-md rounded-full text-primary hover:bg-white transition-colors">
-            <Heart size={18} />
+        {/* HOVER ACTION: Quick View (Slides up) */}
+        <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-20">
+          <button className="w-full py-2.5 bg-white/90 backdrop-blur text-primary rounded-xl font-clash font-bold text-xs uppercase shadow-lg flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-colors">
+            <Zap size={14} /> Quick View
           </button>
         </div>
 
-        {/* CONTENT BARKER */}
-        <div className="p-5">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-lg font-clash font-black text-primary leading-tight group-hover:text-primary-light transition-colors">
-              {product.title}
-            </h3>
-            <span className="text-xl font-clash font-black text-primary">
-              ₹{product.priceReady}
+        {/* Sold Out Overlay */}
+        {isSoldOut && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+            <span className="text-white font-clash font-black text-xl uppercase -rotate-12 border-2 border-white px-3 py-1">
+              Sold Out
             </span>
           </div>
-          <p className="text-xs font-editor text-primary/60 mb-4 line-clamp-1 italic">
-            {product.description}
+        )}
+      </div>
+
+      {/* 2. MINIMAL DETAILS (Below Image) */}
+      <div className="mt-3 space-y-1">
+        <div className="flex justify-between items-start gap-2">
+          <h3 className="text-sm font-clash font-bold text-primary leading-tight line-clamp-2 group-hover:text-primary/70 transition-colors">
+            {product.title}
+          </h3>
+          <span className="text-sm font-clash font-black text-primary whitespace-nowrap">
+            ₹{product.price}
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <p className="text-[10px] font-bold text-primary/40 uppercase tracking-wider">
+            {product.collection || "Clan Drop"}
           </p>
-          
-          <button className="w-full py-3 bg-primary/5 group-hover:bg-primary group-hover:text-accent border border-primary/10 rounded-xl font-clash font-bold text-sm transition-all flex items-center justify-center gap-2">
-            <Zap size={16} /> Quick View
+          {/* Subtle Heart that appears on hover */}
+          <button
+            onClick={toggleWishlist}
+            className="text-primary/20 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+          >
+            <Heart size={14} />
           </button>
         </div>
-      </motion.div>
-
-      {/* EXPANDED OVERLAY */}
-      
-    </div>
+      </div>
+    </motion.div>
   );
 }

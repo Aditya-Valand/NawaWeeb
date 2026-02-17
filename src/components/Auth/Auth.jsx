@@ -9,58 +9,72 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  
+
   // Destructure the login function from your global state
-  const { login } = useAuth(); 
+  const { login } = useAuth();
 
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
 
   const handleAuth = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    const url = isLogin
-      ? "http://localhost:5000/api/auth/login"
-      : "http://localhost:5000/api/auth/register";
+    try {
+      if (isLogin) {
+        // 🛡️ Use AuthContext login (Handles API + Cart Sync)
+        const result = await login(email, password);
 
-    const payload = isLogin
-      ? { email, password }
-      : { email, password, full_name: name };
+        if (result.success) {
+          // Handle Redirects
+          const savedRedirect = sessionStorage.getItem("redirectAfterAuth");
+          if (savedRedirect) {
+            sessionStorage.removeItem("redirectAfterAuth");
+            navigate(savedRedirect);
+          } else {
+            // We can check the role from the context user state, but it might not be updated immediately in this render cycle.
+            // Ideally AuthContext login returns the user object or we fetch it.
+            // For now, default to home, admin check will happen on protected routes or sidebar.
+            // Actually, let's fetch role from localStorage which AuthContext sets.
+            const role = localStorage.getItem("role");
+            navigate(role === "admin" ? "/admin" : "/");
+          }
+        } else {
+          alert(result.message || "Syndicate authentication failed.");
+        }
 
-    const response = await axios.post(url, payload);
-
-    if (response.data.success === true) {
-      // 🛡️ Log in via Context to update the whole app state
-      // Extract user data from Supabase response
-      const userData = response.data.data.user;
-      
-      login(userData, response.data.data.token);
-
-      // Handle Redirects
-      const savedRedirect = sessionStorage.getItem("redirectAfterAuth");
-
-      if (savedRedirect) {
-        sessionStorage.removeItem("redirectAfterAuth");
-        navigate(savedRedirect); 
       } else {
-        navigate(userData.role === "admin" ? "/admin" : "/"); 
+        // REGISTER FLOW
+        const url = "http://localhost:5000/api/auth/register";
+        const payload = { email, password, full_name: name };
+
+        const response = await axios.post(url, payload);
+
+        if (response.data.success === true) {
+          // Auto-login after registration
+          const loginResult = await login(email, password);
+          if (loginResult.success) {
+            navigate("/");
+          } else {
+            // Should not happen if reg was success, but fallback to login page
+            setIsLogin(true);
+            alert("Registration successful! Please login.");
+          }
+        }
       }
+    } catch (err) {
+      // Catch network errors or registration errors
+      alert(err.response?.data?.message || "Syndicate authentication failed.");
     }
-  } catch (err) {
-    // This will now catch errors and show the message from your Supabase backend
-    alert(err.response?.data?.message || "Syndicate authentication failed.");
-  }
-};  
+  };
 
   return (
     <div className="min-h-screen bg-bg-light flex items-center justify-center p-4 lg:p-0">
       <div className="w-full max-w-6xl h-[85vh] bg-white rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(45,73,64,0.1)] overflow-hidden flex flex-col lg:flex-row border border-emerald-100">
-        
+
         {/* LEFT SIDE: THE VIBE */}
         <div className="hidden lg:flex w-1/2 bg-primary relative items-center justify-center p-12 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-emerald-500/20 to-transparent" />
-          <motion.div 
+          <motion.div
             animate={{ scale: [1, 1.1, 1], rotate: [0, 5, 0] }}
             transition={{ duration: 10, repeat: Infinity }}
             className="absolute -bottom-20 -left-20 w-96 h-96 bg-accent/20 blur-[100px] rounded-full"
@@ -76,7 +90,7 @@ export default function Auth() {
           </div>
 
           <div className="absolute right-8 bottom-12 [writing-mode:vertical-lr] text-accent/30 font-clash font-bold tracking-[1em] text-[10px] uppercase">
-              ナワウィーブ • 伝統
+            ナワウィーブ • 伝統
           </div>
         </div>
 
@@ -116,25 +130,25 @@ export default function Auth() {
 
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30" size={18} />
-                  <input 
-                    type="email" 
-                    placeholder="Email Address" 
+                  <input
+                    type="email"
+                    placeholder="Email Address"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)} 
-                    className="w-full bg-bg-light border-none rounded-2xl py-4 pl-12 pr-4 font-clash text-sm focus:ring-2 ring-accent outline-none" 
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-bg-light border-none rounded-2xl py-4 pl-12 pr-4 font-clash text-sm focus:ring-2 ring-accent outline-none"
                   />
                 </div>
 
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30" size={18} />
-                  <input 
-                    type="password" 
-                    placeholder="Password" 
+                  <input
+                    type="password"
+                    placeholder="Password"
                     required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)} 
-                    className="w-full bg-bg-light border-none rounded-2xl py-4 pl-12 pr-4 font-clash text-sm focus:ring-2 ring-accent outline-none" 
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-bg-light border-none rounded-2xl py-4 pl-12 pr-4 font-clash text-sm focus:ring-2 ring-accent outline-none"
                   />
                 </div>
 
@@ -145,7 +159,7 @@ export default function Auth() {
               </form>
 
               <div className="mt-8 text-center">
-                <button 
+                <button
                   onClick={() => setIsLogin(!isLogin)}
                   className="text-xs font-clash font-bold text-primary/40 uppercase tracking-widest hover:text-primary transition-colors"
                 >
