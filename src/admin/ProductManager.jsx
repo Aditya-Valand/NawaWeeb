@@ -363,8 +363,6 @@ export default function ProductManager() {
 
         // 2. Send request with Headers
         await api.delete(`/products/${productId}`);
-          headers: { Authorization: `Bearer ${token}` } // <--- This was missing
-        });
 
         alert("Artifact Deleted 🗑️");
         fetchInventory(); // Refresh the list
