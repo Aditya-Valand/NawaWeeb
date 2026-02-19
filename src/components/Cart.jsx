@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Trash2, Minus, Plus, ArrowRight, ShieldCheck,
@@ -29,9 +29,7 @@ export default function Cart() {
         const token = localStorage.getItem("token");
         if (token) {
             try {
-                const res = await axios.get("http://localhost:5000/api/user/cart", {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.get("/user/cart");
                 if (res.data.success) {
                     setCartItems(res.data.cart);
                 }
@@ -72,10 +70,8 @@ export default function Cart() {
             // We only send the item we changed to be efficient? No, sync expects an array.
             // Let's send the single updated item to sync/upsert it.
             try {
-                await axios.post("http://localhost:5000/api/user/cart/sync", {
+                await api.post("/user/cart/sync", {
                     localCart: [updated[index]]
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
                 });
             } catch (err) {
                 console.error("Failed to update qty on server:", err);
@@ -98,11 +94,9 @@ export default function Cart() {
         const token = localStorage.getItem("token");
         if (token) {
             try {
-                await axios.post("http://localhost:5000/api/user/cart/remove", {
+                await api.post("/user/cart/remove", {
                     productId: itemToRemove.productId,
                     variantId: itemToRemove.variantId
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
                 });
             } catch (err) {
                 console.error("Failed to remove item on server:", err);

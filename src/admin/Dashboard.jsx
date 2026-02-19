@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 import { 
   Layers, 
   ShoppingBag, 
@@ -28,12 +28,12 @@ export default function Dashboard() {
 
         // FETCH PRODUCTS
         // console.log("2. Fetching Products...");
-        const productsRes = await axios.get("http://localhost:5000/api/products", config);
+        const productsRes = await api.get('/products');
         // console.log("3. Products Success:", productsRes.data);
 
         // FETCH ORDERS (The one failing)
         // console.log("4. Fetching Orders...");
-        const ordersRes = await axios.get("http://localhost:5000/api/orders/all", config);
+        const ordersRes = await api.get('/orders/all');
         // console.log("5. Orders Success:", ordersRes.data);
 
         // Calculate Stats

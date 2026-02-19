@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 import { 
   Mail, 
   Clock, 
@@ -28,12 +28,7 @@ export default function OrderInbox() {
         return;
       }
 
-      const res = await axios.get("http://localhost:5000/api/orders/all", {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json' 
-        }
-      });
+      const res = await api.get('/orders/all');
 
       // Based on our refactored controller, data is in res.data.orders
       setOrders(res.data.orders || []);
@@ -58,9 +53,8 @@ export default function OrderInbox() {
       setUpdatingId(orderId);
       const token = localStorage.getItem("token");
       
-      await axios.patch(`http://localhost:5000/api/orders/${orderId}/status`, 
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.patch(`/orders/${orderId}/status`, 
+        { status: newStatus }
       );
 
       // Optimistic UI Update (Update local state immediately)

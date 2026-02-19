@@ -5,8 +5,8 @@ import {
   Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, 
   Sparkles, Zap, Flame, Crown, MapPin, LogOut, Package 
 } from "lucide-react";
-import { useAuth } from "../context/AuthContext"; // Ensure path is correct
-import axios from "axios";
+import { useAuth } from "../context/AuthContext";
+import api from "../api/axios";
 
 export default function NawaweebNavbar() {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ export default function NawaweebNavbar() {
     const fetchMenuData = async () => {
       try {
         // Fetch all active products
-        const res = await axios.get("http://localhost:5000/api/products");
+        const res = await api.get('/products');
         const allProducts = res.data.data?.products || [];
 
         // 1. New Drops: Get Top 5 Latest (assuming backend sorts by newest)

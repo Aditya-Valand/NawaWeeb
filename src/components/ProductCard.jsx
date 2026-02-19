@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Zap, Heart } from "lucide-react";
-import axios from "axios";
+import api from "../api/axios";
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
@@ -20,10 +20,7 @@ export default function ProductCard({ product }) {
         navigate("/auth");
         return;
       }
-      await axios.post("http://localhost:5000/api/user/togglewish",
-        { productId: product.id },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post('/user/togglewish', { productId: product.id });
       // Optional: Add toast notification or local state update if needed
       // For now, we rely on the user checking the wishlist
       alert("Wishlist updated!");

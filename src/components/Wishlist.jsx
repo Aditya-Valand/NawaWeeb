@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Heart, X, ShoppingBag, Ghost
@@ -26,9 +26,7 @@ export default function Wishlist() {
                 return;
             }
 
-            const res = await axios.get("http://localhost:5000/api/user/getwishlist", {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await api.get('/user/getwishlist');
             setWishlist(res.data.wishlist || []);
         } catch (err) {
             console.error("Failed to fetch bonded spirits", err);
@@ -43,10 +41,7 @@ export default function Wishlist() {
             // Optimistic UI Update
             setWishlist(prev => prev.filter(item => item.products.id !== productId));
 
-            await axios.post("http://localhost:5000/api/user/togglewish",
-                { productId },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await api.post('/user/togglewish', { productId });
         } catch (err) {
             console.error("Failed to sever bond", err);
             // Revert if needed? Ideally yes, but complex.

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 import {
   ShoppingCart, ArrowLeft, Heart, ShieldCheck, Truck,
   ChevronLeft, ChevronRight, Plus, Minus, Star, Share2
@@ -25,7 +25,7 @@ export default function ProductDetail() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const res = await api.get(`/products/${id}`);
         const productData = res.data.data.product;
         setProduct(productData);
 
@@ -62,10 +62,8 @@ export default function ProductDetail() {
     // Sync with backend if logged in
     const token = localStorage.getItem("token");
     if (token) {
-      axios.post("http://localhost:5000/api/user/cart/sync", {
+      api.post('/user/cart/sync', {
         localCart: updatedCart
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       }).catch(err => console.error("Sync failed", err));
     }
 
@@ -79,10 +77,7 @@ export default function ProductDetail() {
         navigate("/auth");
         return;
       }
-      await axios.post("http://localhost:5000/api/user/togglewish",
-        { productId: product.id },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post('/user/togglewish', { productId: product.id });
       alert("Wishlist updated!");
     } catch (err) {
       console.error("Wishlist error", err);

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, User, ArrowRight, Zap } from "lucide-react";
 import { useAuth } from "../../context/AuthContext"; // Ensure this path is correct
@@ -44,10 +44,9 @@ export default function Auth() {
 
       } else {
         // REGISTER FLOW
-        const url = "http://localhost:5000/api/auth/register";
         const payload = { email, password, full_name: name };
 
-        const response = await axios.post(url, payload);
+        const response = await api.post('/auth/register', payload);
 
         if (response.data.success === true) {
           // Auto-login after registration

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axios";
 import { useSearchParams } from "react-router-dom";
 import Hero from "./Hero";
 import HypeBanner from "./HypeBanner";
@@ -16,7 +16,7 @@ export default function Shop() {
   useEffect(() => {
     const fetchArtifacts = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/products");
+        const res = await api.get('/products');
         const allProducts = res.data.data.products || [];
         const activeItems = allProducts.filter(p => p.is_active);
         setProducts(activeItems);
