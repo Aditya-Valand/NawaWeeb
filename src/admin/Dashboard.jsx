@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { 
-  Layers, 
-  ShoppingBag, 
-  IndianRupee, 
-  Activity, 
-  TrendingUp 
+import {
+  Layers,
+  ShoppingBag,
+  IndianRupee,
+  Activity,
+  TrendingUp,
+  AlertCircle
 } from "lucide-react";
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({ 
-    totalOrders: 0, 
-    totalProducts: 0, 
-    totalRevenue: 0 
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalProducts: 0,
+    totalRevenue: 0
   });
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
 
   // Inside src/components/Dashboard.jsx
 
@@ -55,24 +57,9 @@ setStats({
 });
 
       } catch (err) {
-        // 🚨 THIS IS THE DEBUGGING PART 🚨
-        console.error("❌ FULL ERROR OBJECT:", err);
-        
-        if (err.response) {
-          // The server responded with a status code (like 400)
-          console.error("❌ DATA:", err.response.data);
-          console.error("❌ STATUS:", err.response.status);
-          console.error("❌ HEADERS:", err.response.headers);
-          
-          // Show alert with the REAL message
-          alert(`Server Error: ${JSON.stringify(err.response.data)}`);
-        } else if (err.request) {
-          // The request was made but no response was received
-          console.error("❌ NO RESPONSE:", err.request);
-        } else {
-          // Something happened in setting up the request
-          console.error("❌ SETUP ERROR:", err.message);
-        }
+        const msg = err.response?.data?.message || err.message || "Failed to load stats";
+        console.error("Dashboard fetch error:", err.response?.data || err.message);
+        setFetchError(msg);
       } finally {
         setLoading(false);
       }
@@ -99,6 +86,13 @@ setStats({
           Overview of the Clan's operations.
         </p>
       </header>
+
+      {fetchError && (
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm">
+          <AlertCircle size={18} className="shrink-0" />
+          <span><strong>Error loading stats:</strong> {fetchError}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         

@@ -4,20 +4,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // The Deep Emerald Green
-        primary: "#2D4940", 
-        "primary-light": "#42665b",
-        "primary-dark": "#1f332d",
+        // Charcoal Grey - Modern Dark Base
+        primary: "#3c4142", 
+        "primary-light": "#505659",
+        "primary-dark": "#27292b",
 
         // The Traditional Gold/Pastel Highlight
-        accent: "#F6E38F",
-        "accent-dark": "#e0c768",
+        accent: "#EFC853",
+        "accent-dark": "#CFA431",
 
         // Adding the Silver/Metallic from your requirements
         silver: "#C0C0C0",
         "silver-light": "#E5E7EB",
 
-        "text-dark": "#1A1A1A",
+        "text-dark": "#AAB2B7",
         "bg-light": "#F5F5F5", // Off-white clean background
       },
       fontFamily: {

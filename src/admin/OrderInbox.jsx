@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { 
-  Mail, 
-  Clock, 
-  Package, 
-  Truck, 
-  CheckCircle, 
+import {
+  Mail,
+  Clock,
+  Package,
+  MapPin,
   AlertCircle,
   User,
   ChevronDown
@@ -15,34 +14,32 @@ export default function OrderInbox() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
+  const [error, setError] = useState("");
 
   // Fetch Orders
   const fetchOrders = async () => {
     try {
       setLoading(true);
+      setError("");
       const token = localStorage.getItem("token");
 
-      // 🚨 Debug: Check if token actually exists in your browser
       if (!token) {
-        console.error("No token found in localStorage");
+        setError("No auth token found. Please log out and log back in.");
         return;
       }
 
       const res = await axios.get("http://localhost:5000/api/orders/all", {
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json' 
+          'Content-Type': 'application/json'
         }
       });
 
-      // Based on our refactored controller, data is in res.data.orders
       setOrders(res.data.orders || []);
     } catch (err) {
-      console.error("Failed to fetch scrolls:", err.response?.data || err.message);
-      // If 401, redirect to login or show alert
-      if (err.response?.status === 401) {
-        alert("Session expired. Please log in again.");
-      }
+      const msg = err.response?.data?.message || err.message || "Failed to fetch orders";
+      setError(msg);
+      console.error("Order fetch error:", err.response?.data || err.message);
     } finally {
       setLoading(false);
     }
@@ -76,12 +73,12 @@ export default function OrderInbox() {
     }
   };
 
-  // Helper: Status Color Logic
+  // Helper: Status Color Logic (lowercase matches DB enum values)
   const getStatusColor = (status) => {
     switch(status) {
-      case 'Delivered': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'Shipped': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'Cancelled': return 'bg-red-100 text-red-700 border-red-200';
+      case 'delivered': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'shipped': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'cancelled': return 'bg-red-100 text-red-700 border-red-200';
       default: return 'bg-yellow-100 text-yellow-700 border-yellow-200';
     }
   };
@@ -100,6 +97,16 @@ export default function OrderInbox() {
           </p>
         </div>
       </header>
+
+      {error && (
+        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700">
+          <AlertCircle size={18} className="shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold text-sm uppercase">Error loading orders</p>
+            <p className="text-xs mt-1">{error}</p>
+          </div>
+        </div>
+      )}
       
       <div className="grid gap-6">
         {orders.map((order) => (
@@ -133,14 +140,13 @@ export default function OrderInbox() {
 
                 {/* Status Dropdown */}
                 <div className="relative">
-                  <select 
+                  <select
                     value={order.status}
                     disabled={updatingId === order.id}
                     onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
                     className={`appearance-none cursor-pointer pl-4 pr-10 py-1.5 rounded-full text-xs font-black uppercase border focus:outline-none focus:ring-2 ring-primary/20 ${getStatusColor(order.status)}`}
                   >
                     <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
                     <option value="shipped">Shipped</option>
                     <option value="delivered">Delivered</option>
                     <option value="cancelled">Cancelled</option>
@@ -211,6 +217,23 @@ export default function OrderInbox() {
 </div>
 
             </div>
+
+            {/* --- BOTTOM ROW: Shipping Address --- */}
+            {order.shipping_address && (
+              <div className="mt-4 pt-4 border-t border-dashed border-emerald-100 flex items-start gap-3">
+                <MapPin size={14} className="text-primary/30 shrink-0 mt-0.5" />
+                <p className="text-xs text-primary/50 font-medium">
+                  {[
+                    order.shipping_address.fullName,
+                    order.shipping_address.street,
+                    order.shipping_address.city,
+                    order.shipping_address.state,
+                    order.shipping_address.pincode,
+                    order.shipping_address.phone
+                  ].filter(Boolean).join(', ')}
+                </p>
+              </div>
+            )}
           </div>
         ))}
 

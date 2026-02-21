@@ -15,6 +15,7 @@ export default function ProductDetail() {
 
   // UI State
   const [currentImage, setCurrentImage] = useState(0);
+  const [isAdding, setIsAdding] = useState(false);
 
   // Selection State
   const [selectedVariant, setSelectedVariant] = useState(null);
@@ -43,7 +44,13 @@ export default function ProductDetail() {
     fetchProduct();
   }, [id]);
 
-  const handleOrder = () => {
+  const handleOrder = async () => {
+    if (isAdding) return;
+    setIsAdding(true);
+
+    const baseItemPrice = selectedVariant?.price || product.price;
+    const actualPrice = isHandmade ? Math.round(baseItemPrice * 1.5) : baseItemPrice;
+
     const cartItem = {
       productId: product.id,
       variantId: selectedVariant?.id,
@@ -51,18 +58,44 @@ export default function ProductDetail() {
       image: product.images[0],
       size: selectedVariant?.size,
       qty: quantity,
-      price: selectedVariant?.price || product.price,
+      price: actualPrice,
       isHandmade: isHandmade
     };
 
-    const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const updatedCart = [...existingCart, cartItem];
+    const token = localStorage.getItem("token");
+
+    // For authenticated users, always use the server cart as the source of truth.
+    // Using localStorage here causes stale data from old sessions to corrupt the sync.
+    let existingCart;
+    if (token) {
+      try {
+        const res = await axios.get("http://localhost:5000/api/user/cart", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        existingCart = (res.data.success && Array.isArray(res.data.cart)) ? res.data.cart : [];
+      } catch {
+        existingCart = [];
+      }
+    } else {
+      existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    }
+
+    const existingIndex = existingCart.findIndex(
+      i => i.productId === cartItem.productId &&
+           i.variantId === cartItem.variantId &&
+           i.isHandmade === cartItem.isHandmade
+    );
+
+    const updatedCart = existingIndex > -1
+      ? existingCart.map((item, i) =>
+          i === existingIndex ? { ...item, qty: item.qty + cartItem.qty } : item
+        )
+      : [...existingCart, cartItem];
+
     localStorage.setItem("cart", JSON.stringify(updatedCart));
 
-    // Sync with backend if logged in
-    const token = localStorage.getItem("token");
     if (token) {
-      axios.post("http://localhost:5000/api/user/cart/sync", {
+      await axios.post("http://localhost:5000/api/user/cart/sync", {
         localCart: updatedCart
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -259,14 +292,14 @@ export default function ProductDetail() {
             <div className="pt-6 flex gap-4">
               <button
                 onClick={handleOrder}
-                disabled={currentStock === 0}
-                className={`flex-1 h-16 rounded-full font-clash font-black text-sm uppercase tracking-[0.15em] flex items-center justify-center gap-3 shadow-2xl transition-all ${currentStock > 0
+                disabled={currentStock === 0 || isAdding}
+                className={`flex-1 h-16 rounded-full font-clash font-black text-sm uppercase tracking-[0.15em] flex items-center justify-center gap-3 shadow-2xl transition-all ${currentStock > 0 && !isAdding
                   ? 'bg-primary text-white hover:scale-[1.02] hover:shadow-primary/30'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   }`}
               >
-                <ShoppingCart size={18} className={currentStock > 0 ? "animate-bounce-slow" : ""} />
-                {currentStock > 0 ? `Secure Artifact` : 'Sold Out'}
+                <ShoppingCart size={18} className={currentStock > 0 && !isAdding ? "animate-bounce-slow" : ""} />
+                {isAdding ? 'Adding...' : currentStock > 0 ? 'Secure Artifact' : 'Sold Out'}
               </button>
 
               <button

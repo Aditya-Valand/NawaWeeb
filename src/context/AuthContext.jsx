@@ -13,12 +13,11 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          // Verify token
-          const res = await axios.get('http://localhost:5000/api/auth/me', {
+          // Verify token (route is /profile, not /me)
+          const res = await axios.get('http://localhost:5000/api/auth/profile', {
             headers: { Authorization: `Bearer ${token}` }
           });
-          // Handle response structure (res.data.data.user based on your previous code)
-          setUser(res.data.data.user || res.data.user);
+          setUser(res.data.data?.user || res.data.user);
         } catch (err) {
           console.error("Session expired:", err);
           localStorage.removeItem('token');

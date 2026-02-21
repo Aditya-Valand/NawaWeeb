@@ -34,6 +34,8 @@ export default function Cart() {
                 });
                 if (res.data.success) {
                     setCartItems(res.data.cart);
+                    // Keep localStorage in sync so ProductDetail reads fresh data
+                    localStorage.setItem("cart", JSON.stringify(res.data.cart));
                 }
             } catch (err) {
                 console.error("Failed to fetch server cart:", err);
@@ -58,25 +60,23 @@ export default function Cart() {
     const updateQty = async (index, newQty) => {
         if (newQty < 1) return;
 
-        // Optimistic Update
+        // Optimistic Update (map creates new objects, avoids mutating state directly)
         const oldCart = [...cartItems];
-        const updated = [...cartItems];
-        updated[index].qty = newQty;
+        const updated = cartItems.map((item, i) =>
+            i === index ? { ...item, qty: newQty } : item
+        );
         setCartItems(updated);
+        window.dispatchEvent(new Event("storage"));
 
         const token = localStorage.getItem("token");
         if (token) {
-            // Prepare payload for sync
-            // Note: Our sync endpoint merges. 
-            // Ideally we should have a specific 'update' endpoint but sync works for upsert.
-            // We only send the item we changed to be efficient? No, sync expects an array.
-            // Let's send the single updated item to sync/upsert it.
             try {
                 await axios.post("http://localhost:5000/api/user/cart/sync", {
-                    localCart: [updated[index]]
+                    localCart: updated
                 }, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+                localStorage.setItem("cart", JSON.stringify(updated));
             } catch (err) {
                 console.error("Failed to update qty on server:", err);
                 setCartItems(oldCart); // Revert on error
@@ -94,6 +94,7 @@ export default function Cart() {
         const oldCart = [...cartItems];
         const updated = cartItems.filter((_, i) => i !== index);
         setCartItems(updated);
+        window.dispatchEvent(new Event("storage"));
 
         const token = localStorage.getItem("token");
         if (token) {
@@ -107,10 +108,10 @@ export default function Cart() {
             } catch (err) {
                 console.error("Failed to remove item on server:", err);
                 setCartItems(oldCart);
+                window.dispatchEvent(new Event("storage"));
             }
         } else {
             localStorage.setItem("cart", JSON.stringify(updated));
-            window.dispatchEvent(new Event("storage"));
         }
     };
 
@@ -278,7 +279,7 @@ export default function Cart() {
                             </div>
 
                             <button
-                                onClick={() => alert("Payment Integration Next!")}
+                                onClick={() => navigate("/checkout")}
                                 className="w-full group relative py-5 bg-white text-black rounded-2xl font-clash font-black text-sm uppercase tracking-[0.2em] overflow-hidden hover:scale-[1.02] transition-transform duration-300"
                             >
                                 <div className="absolute inset-0 bg-[#FFD700] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out" />

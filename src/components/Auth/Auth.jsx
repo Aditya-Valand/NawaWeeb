@@ -152,6 +152,18 @@ export default function Auth() {
                   />
                 </div>
 
+                {isLogin && (
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/forgot-password")}
+                      className="text-xs font-clash font-bold text-accent hover:text-accent-dark transition-colors uppercase tracking-widest"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
+
                 <button className="w-full py-5 bg-primary text-accent rounded-full font-clash font-black text-lg flex items-center justify-center gap-3 shadow-xl hover:shadow-primary/20 transition-all mt-8 group">
                   {isLogin ? "Sign In" : "Join the Clan"}
                   <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />

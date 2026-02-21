@@ -22,6 +22,21 @@ export default function NawaweebNavbar() {
   const [dynamicDrops, setDynamicDrops] = useState([]);
   const [dynamicCollections, setDynamicCollections] = useState([]);
 
+  // --- CART COUNT STATE ---
+  const [cartCount, setCartCount] = useState(0);
+
+  const updateCartCount = () => {
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const count = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+    setCartCount(count);
+  };
+
+  useEffect(() => {
+    updateCartCount();
+    window.addEventListener("storage", updateCartCount);
+    return () => window.removeEventListener("storage", updateCartCount);
+  }, []);
+
   // --- FETCH MENU DATA FROM BACKEND ---
   useEffect(() => {
     const fetchMenuData = async () => {
@@ -137,10 +152,10 @@ export default function NawaweebNavbar() {
                 <Menu size={20} />
               </motion.button>
 
-              <motion.a 
-                href="/" 
+              <motion.button
+                onClick={() => navigate("/")}
                 style={{ scale: logoScale, y: logoY }} 
-                className="flex flex-col group cursor-pointer"
+                className="flex flex-col group cursor-pointer bg-transparent border-none p-0"
               >
                 <span className="text-2xl md:text-4xl font-clash font-black tracking-tighter text-primary leading-none">
                   NAWAWEEB
@@ -148,7 +163,7 @@ export default function NawaweebNavbar() {
                 <span className="text-[10px] md:text-[12px] font-clash font-bold tracking-[0.4em] text-accent-dark uppercase block">
                   Anime × Chikankari
                 </span>
-              </motion.a>
+              </motion.button>
             </div>
 
             {/* CENTER: Desktop Nav */}
@@ -192,8 +207,15 @@ export default function NawaweebNavbar() {
                             <button
                               key={subItem}
                               onClick={() => {
-                                // Navigate to shop with filter
-                                navigate(`/shop?filter=${encodeURIComponent(subItem)}`);
+                                // Special handling for Our Story and Contact
+                                if (subItem === "Our Story") {
+                                  navigate("/ourstory");
+                                } else if (subItem === "Contact") {
+                                  navigate("/contact");
+                                } else {
+                                  // Navigate to shop with filter
+                                  navigate(`/shop?filter=${encodeURIComponent(subItem)}`);
+                                }
                                 setActiveMenu(null);
                               }}
                               className="w-full text-left block px-4 py-3 text-sm font-clash text-primary/70 hover:text-primary hover:bg-primary/5 rounded-xl transition uppercase"
@@ -242,6 +264,11 @@ export default function NawaweebNavbar() {
                 <span className="relative z-10 hidden sm:inline group-hover:text-primary transition-colors">
                   Buy Now
                 </span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-primary text-[10px] font-black rounded-full flex items-center justify-center z-20 border border-primary">
+                    {cartCount > 9 ? "9+" : cartCount}
+                  </span>
+                )}
               </motion.button>
             </div>
           </div>
@@ -368,7 +395,14 @@ export default function NawaweebNavbar() {
                           <button
                             key={idx}
                             onClick={() => {
-                              navigate(`/shop?filter=${encodeURIComponent(sub)}`);
+                              // Special handling for Our Story and Contact
+                              if (sub === "Our Story") {
+                                navigate("/ourstory");
+                              } else if (sub === "Contact") {
+                                navigate("/contact");
+                              } else {
+                                navigate(`/shop?filter=${encodeURIComponent(sub)}`);
+                              }
                               setOpen(false);
                             }}
                             className="block w-full text-left py-2 text-sm font-clash text-primary/60 hover:text-primary uppercase"
