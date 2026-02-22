@@ -324,14 +324,11 @@ export default function ProductManager() {
 
       const method = editingId ? 'put' : 'post';
 
-      // 3. 🚀 SEND REQUEST WITH HEADERS (Uncommented & Fixed)
-      await axios({
+      // 3. 🚀 SEND REQUEST - Authorization header automatically added by axios interceptor
+      await api({
         method: method,
         url: url,
-        data: payload,
-        headers: { 
-            Authorization: `Bearer ${token}` // <--- THIS WAS MISSING
-        } 
+        data: payload
       });
 
       alert("Artifact Manifested! ⛩️");

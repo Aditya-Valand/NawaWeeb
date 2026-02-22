@@ -69,9 +69,8 @@ export default function ProductDetail() {
     let existingCart;
     if (token) {
       try {
-        const res = await axios.get("/user/cart", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // Authorization header automatically added by axios interceptor
+        const res = await api.get("/user/cart");
         existingCart = (res.data.success && Array.isArray(res.data.cart)) ? res.data.cart : [];
       } catch {
         existingCart = [];
@@ -95,10 +94,9 @@ export default function ProductDetail() {
     localStorage.setItem("cart", JSON.stringify(updatedCart));
 
     if (token) {
-      await axios.post("/user/cart/sync", {
+      // Authorization header automatically added by axios interceptor
+      await api.post("/user/cart/sync", {
         localCart: updatedCart
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       }).catch(err => console.error("Sync failed", err));
     }
     navigate("/cart");
@@ -111,7 +109,9 @@ export default function ProductDetail() {
         navigate("/auth");
         return;
       }
-      await api.post('/user/togglewish', { productId: product.id },{ headers: { Authorization: `Bearer ${token}` } });
+      // Authorization header automatically added by axios interceptor
+      await api.post('/user/togglewish', { productId: product.id });
+
       alert("Wishlist updated!");
     } catch (err) {
       console.error("Wishlist error", err);

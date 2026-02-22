@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Truck, MapPin, ShieldCheck, CreditCard, AlertCircle, X, Check, Trash2 } from "lucide-react";
 import api from "../api/axios";
-import axios from "axios";
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -35,9 +34,8 @@ export default function Checkout() {
       let cart = [];
       if (token) {
         try {
-          const res = await axios.get("http://localhost:5000/api/user/cart", {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          // Authorization header automatically added by axios interceptor
+          const res = await api.get("/user/cart");
           if (res.data.success) {
             cart = res.data.cart;
           } else {

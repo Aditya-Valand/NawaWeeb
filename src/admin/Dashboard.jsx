@@ -23,9 +23,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const config = { headers: { Authorization: `Bearer ${token}` } };
-
+        // Authorization header automatically added by axios interceptor
         // console.log("1. Starting Fetch...");
 
         // FETCH PRODUCTS

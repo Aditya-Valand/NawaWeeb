@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
 import api from '../api/axios';
 
 const AuthContext = createContext();
@@ -15,9 +14,8 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           // Verify token (route is /profile, not /me)
-          const res = await axios.get('/auth/profile', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          // Authorization header is automatically added by axios interceptor
+          const res = await api.get('/auth/profile');
           setUser(res.data.data?.user || res.data.user);
         } catch (err) {
           console.error("Session expired:", err);

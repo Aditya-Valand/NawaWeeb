@@ -30,12 +30,8 @@ export default function OrderInbox() {
         return;
       }
 
-      const res = await api.get('/orders/all', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Authorization header automatically added by axios interceptor
+      const res = await api.get('/orders/all');
       
 
       setOrders(res.data.orders || []);

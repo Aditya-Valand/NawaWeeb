@@ -69,10 +69,9 @@ export default function Cart() {
         const token = localStorage.getItem("token");
         if (token) {
             try {
-                await axios.post("/user/cart/sync", {
+                // Authorization header automatically added by axios interceptor
+                await api.post("/user/cart/sync", {
                     localCart: updated
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
                 });
                 localStorage.setItem("cart", JSON.stringify(updated));
             } catch (err) {
