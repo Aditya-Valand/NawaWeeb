@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 import {
   ShoppingCart, ArrowLeft, Heart, ShieldCheck, Truck,
   ChevronLeft, ChevronRight, Plus, Minus, Star, Share2
@@ -26,7 +26,7 @@ export default function ProductDetail() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const res = await api.get(`/products/${id}`);
         const productData = res.data.data.product;
         setProduct(productData);
 
@@ -69,7 +69,7 @@ export default function ProductDetail() {
     let existingCart;
     if (token) {
       try {
-        const res = await axios.get("http://localhost:5000/api/user/cart", {
+        const res = await axios.get("/user/cart", {
           headers: { Authorization: `Bearer ${token}` }
         });
         existingCart = (res.data.success && Array.isArray(res.data.cart)) ? res.data.cart : [];
@@ -95,13 +95,12 @@ export default function ProductDetail() {
     localStorage.setItem("cart", JSON.stringify(updatedCart));
 
     if (token) {
-      await axios.post("http://localhost:5000/api/user/cart/sync", {
+      await axios.post("/user/cart/sync", {
         localCart: updatedCart
       }, {
         headers: { Authorization: `Bearer ${token}` }
       }).catch(err => console.error("Sync failed", err));
     }
-
     navigate("/cart");
   };
 
@@ -112,10 +111,7 @@ export default function ProductDetail() {
         navigate("/auth");
         return;
       }
-      await axios.post("http://localhost:5000/api/user/togglewish",
-        { productId: product.id },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post('/user/togglewish', { productId: product.id },{ headers: { Authorization: `Bearer ${token}` } });
       alert("Wishlist updated!");
     } catch (err) {
       console.error("Wishlist error", err);

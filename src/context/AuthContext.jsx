@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import api from '../api/axios';
 
 const AuthContext = createContext();
 
@@ -14,7 +15,7 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           // Verify token (route is /profile, not /me)
-          const res = await axios.get('http://localhost:5000/api/auth/profile', {
+          const res = await axios.get('/auth/profile', {
             headers: { Authorization: `Bearer ${token}` }
           });
           setUser(res.data.data?.user || res.data.user);
@@ -33,7 +34,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       // 1. Call Login API
-      const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const res = await api.post('/auth/login', { email, password });
 
       // Adapt to your backend response structure
       const token = res.data.token;
@@ -54,18 +55,11 @@ export const AuthProvider = ({ children }) => {
           // A. Upload local "guest" cart to server
           // A. Upload local "guest" cart to server
           // Note: Adjust '/api/users/cart/sync' if your route is different
-          await axios.post(
-            "http://localhost:5000/api/user/cart/sync",
-            { localCart },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
+          await api.post('/user/cart/sync', { localCart });
         }
 
         // B. Download the FINAL merged cart
-        const serverCartRes = await axios.get(
-          "http://localhost:5000/api/user/cart",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const serverCartRes = await api.get('/user/cart');
 
         // C. Update Local Storage with the server truth
         if (serverCartRes.data.success) {

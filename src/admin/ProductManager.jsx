@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 import {
   PackagePlus,
   Image as ImageIcon,
@@ -196,7 +196,7 @@ export default function ProductManager() {
   const fetchInventory = async () => {
     setFetching(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/products");
+      const res = await api.get('/products');
       // Controller returns { success: true, data: { products: [] } }
       setProducts(res.data.data?.products || []);
     } catch (err) {
@@ -209,7 +209,7 @@ export default function ProductManager() {
   // 2. Fetch Single Product (Aligned with Controller Response)
   const fetchSingleProduct = async (productId) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/products/${productId}`);
+      const res = await api.get(`/products/${productId}`);
       const product = res.data.data.product;
 
       setEditingId(product.id);
@@ -319,8 +319,8 @@ export default function ProductManager() {
       };
 
       const url = editingId 
-        ? `http://localhost:5000/api/products/${editingId}` 
-        : "http://localhost:5000/api/products";
+        ? `/products/${editingId}` 
+        : "/products";
 
       const method = editingId ? 'put' : 'post';
 
@@ -362,9 +362,7 @@ export default function ProductManager() {
         const token = localStorage.getItem("token");
 
         // 2. Send request with Headers
-        await axios.delete(`http://localhost:5000/api/products/${productId}`, {
-          headers: { Authorization: `Bearer ${token}` } // <--- This was missing
-        });
+        await api.delete(`/products/${productId}`);
 
         alert("Artifact Deleted 🗑️");
         fetchInventory(); // Refresh the list

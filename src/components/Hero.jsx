@@ -129,7 +129,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Star, Hexagon, Zap, ShoppingBag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 
 export default function Hero() {
   const navigate = useNavigate();
@@ -140,7 +140,7 @@ export default function Hero() {
   useEffect(() => {
     const fetchHero = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/products/hero");
+        const res = await api.get('/products/hero');
         if (res.data.success && res.data.product) {
           setHeroProduct(res.data.product);
         }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 import { motion } from "framer-motion";
 import {
     Package, Truck, CheckCircle, Clock, ChevronDown,
@@ -18,9 +18,7 @@ export default function OrderHistory() {
                 const token = localStorage.getItem("token");
                 if (!token) return;
 
-                const res = await axios.get("http://localhost:5000/api/orders", {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.get('/orders');
                 setOrders(res.data.orders || []);
             } catch (err) {
                 console.error("Failed to retrieve archives", err);
@@ -69,10 +67,8 @@ export default function OrderHistory() {
         const token = localStorage.getItem("token");
         if (token) {
             try {
-                await axios.post("http://localhost:5000/api/user/cart/sync", {
+                await api.post('/user/cart/sync', {
                     localCart: cart
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
                 });
             } catch (err) {
                 console.error("Failed to sync cart", err);

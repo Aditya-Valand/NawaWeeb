@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/axios";
 import { motion } from "framer-motion";
 import { Lock, ArrowRight, CheckCircle, Zap } from "lucide-react";
 
@@ -33,7 +33,7 @@ export default function ResetPassword() {
     setMessage("");
 
     try {
-      const response = await axios.post(`http://localhost:5000/api/auth/reset-password/${token}`, {
+      const response = await api.post(`/auth/reset-password/${token}`, {
         password: formData.password,
         confirmPassword: formData.confirmPassword
       });

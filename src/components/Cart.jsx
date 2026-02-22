@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Trash2, Minus, Plus, ArrowRight, ShieldCheck,
@@ -29,9 +29,7 @@ export default function Cart() {
         const token = localStorage.getItem("token");
         if (token) {
             try {
-                const res = await axios.get("http://localhost:5000/api/user/cart", {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.get("/user/cart");
                 if (res.data.success) {
                     setCartItems(res.data.cart);
                     // Keep localStorage in sync so ProductDetail reads fresh data
@@ -71,7 +69,7 @@ export default function Cart() {
         const token = localStorage.getItem("token");
         if (token) {
             try {
-                await axios.post("http://localhost:5000/api/user/cart/sync", {
+                await axios.post("/user/cart/sync", {
                     localCart: updated
                 }, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -99,11 +97,9 @@ export default function Cart() {
         const token = localStorage.getItem("token");
         if (token) {
             try {
-                await axios.post("http://localhost:5000/api/user/cart/remove", {
+                await api.post("/user/cart/remove", {
                     productId: itemToRemove.productId,
                     variantId: itemToRemove.variantId
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
                 });
             } catch (err) {
                 console.error("Failed to remove item on server:", err);
