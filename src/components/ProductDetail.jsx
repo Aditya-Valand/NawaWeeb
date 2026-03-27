@@ -188,7 +188,37 @@ export default function ProductDetail() {
         <meta name="twitter:image" content={productImage} />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-[#FAFAFA] pt-24 lg:pt-32 pb-12 px-4 lg:px-12">
+    {/* Mobile sticky bottom bar — Add to Cart without scrolling */}
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 py-3 shadow-2xl">
+      <div className="flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-clash font-bold text-primary/40 uppercase truncate">
+            {selectedVariant ? `Size: ${selectedVariant.size}` : product ? "Select a size" : ""}
+          </p>
+          <p className="font-clash font-black text-primary text-xl">₹{finalPrice || 0}</p>
+        </div>
+        <button
+          onClick={handleOrder}
+          disabled={!product || currentStock === 0 || isAdding}
+          className={`flex-1 h-13 rounded-full font-clash font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all ${
+            product && currentStock > 0 && !isAdding
+              ? "bg-primary text-white active:scale-95"
+              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+          }`}
+        >
+          <ShoppingCart size={16} />
+          {isAdding ? "Adding..." : product && currentStock > 0 ? "Add to Cart" : "Sold Out"}
+        </button>
+        <button
+          onClick={toggleWishlist}
+          className="h-13 w-13 flex items-center justify-center border-2 border-primary/10 rounded-full shrink-0"
+        >
+          <Heart size={20} />
+        </button>
+      </div>
+    </div>
+
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-[#FAFAFA] pt-20 lg:pt-32 pb-28 lg:pb-12 px-4 lg:px-12">
       <div className="max-w-7xl mx-auto">
 
         {/* Breadcrumb Back Button */}
@@ -205,8 +235,8 @@ export default function ProductDetail() {
           {/* LEFT: AESTHETIC IMAGE CONTAINER (Col 6 - Balanced) */}
           <div className="lg:col-span-6 space-y-6">
 
-            {/* The Frame */}
-            <div className="relative aspect-[3/4] lg:h-[600px] w-full rounded-[2.5rem] bg-white border border-primary/5 shadow-2xl shadow-primary/5 overflow-hidden group">
+            {/* The Frame — compact on mobile, full on desktop */}
+            <div className="relative h-72 sm:h-96 lg:aspect-[3/4] lg:h-[600px] w-full rounded-[2rem] lg:rounded-[2.5rem] bg-white border border-primary/5 shadow-2xl shadow-primary/5 overflow-hidden group">
 
               {/* Floating Image (Padding added for aesthetic) */}
               <div className="absolute inset-0 p-8 lg:p-12 flex items-center justify-center bg-gray-50/50">
@@ -275,7 +305,7 @@ export default function ProductDetail() {
                 )}
               </div>
 
-              <h1 className="text-5xl lg:text-7xl font-clash font-black text-primary leading-[0.9] uppercase tracking-tighter">
+              <h1 className="text-3xl sm:text-4xl lg:text-7xl font-clash font-black text-primary leading-[0.9] uppercase tracking-tighter">
                 {product.title}
               </h1>
 
@@ -349,8 +379,8 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* BOTTOM ACTIONS */}
-            <div className="pt-6 flex gap-4">
+            {/* BOTTOM ACTIONS — hidden on mobile (sticky bar handles it) */}
+            <div className="hidden lg:flex pt-6 gap-4">
               <button
                 onClick={handleOrder}
                 disabled={currentStock === 0 || isAdding}
@@ -371,7 +401,7 @@ export default function ProductDetail() {
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-6 pt-2">
+            <div className="hidden lg:flex items-center justify-center gap-6 pt-2">
               <div className="flex items-center gap-2 text-primary/40 font-bold text-[9px] uppercase tracking-widest">
                 <ShieldCheck size={14} className="text-emerald-500" /> Authenticated
               </div>

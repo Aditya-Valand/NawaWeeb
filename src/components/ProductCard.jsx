@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Heart } from "lucide-react";
 import api from "../api/axios";
 
@@ -8,33 +8,82 @@ import api from "../api/axios";
 function optimizeImage(url) {
   if (!url) return url;
   if (url.includes("res.cloudinary.com") && url.includes("/upload/")) {
-    return url.replace("/upload/", "/upload/f_auto,q_auto/");
+    return url.replace("/upload/", "/upload/f_auto,q_auto,w_600/");
   }
   return url;
 }
 
+// Read cached wishlist IDs from localStorage (written by Wishlist page)
+function isInWishlistCache(productId) {
+  try {
+    const ids = JSON.parse(localStorage.getItem("wishlist_ids") || "[]");
+    return ids.includes(productId);
+  } catch {
+    return false;
+  }
+}
+
+function updateWishlistCache(productId, add) {
+  try {
+    const ids = JSON.parse(localStorage.getItem("wishlist_ids") || "[]");
+    const next = add
+      ? [...new Set([...ids, productId])]
+      : ids.filter((id) => id !== productId);
+    localStorage.setItem("wishlist_ids", JSON.stringify(next));
+  } catch { /* storage quota — non-critical */ }
+}
+
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
+
+  const [wishlisted, setWishlisted] = useState(() => isInWishlistCache(product.id));
+  const [toggling, setToggling]     = useState(false);
+  const [toast, setToast]           = useState(null); // { msg, type }
+
+  // Stay in sync if Wishlist page updates the cache from another component
+  useEffect(() => {
+    const onStorage = () => setWishlisted(isInWishlistCache(product.id));
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [product.id]);
 
   if (!product.is_active) return null;
 
   const totalStock = product.product_variants?.reduce((sum, v) => sum + (v.stock_quantity || 0), 0) || 0;
   const isSoldOut = totalStock === 0;
 
+  const showToast = (msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 2000);
+  };
+
   const toggleWishlist = async (e) => {
-    e.stopPropagation(); // Prevent navigating to product page
+    e.stopPropagation();
+    if (toggling) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/auth");
+      return;
+    }
+
+    // Optimistic update
+    const wasWishlisted = wishlisted;
+    setToggling(true);
+    setWishlisted(!wasWishlisted);
+    updateWishlistCache(product.id, !wasWishlisted);
+
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/auth");
-        return;
-      }
-      await api.post('/user/togglewish', { productId: product.id });
-      // Optional: Add toast notification or local state update if needed
-      // For now, we rely on the user checking the wishlist
-      alert("Wishlist updated!");
+      await api.post("/user/togglewish", { productId: product.id });
+      showToast(wasWishlisted ? "Removed from wishlist" : "Added to wishlist", wasWishlisted ? "remove" : "success");
     } catch (err) {
-      console.error("Wishlist error", err);
+      console.error("Wishlist toggle failed:", err);
+      // Revert on error
+      setWishlisted(wasWishlisted);
+      updateWishlistCache(product.id, wasWishlisted);
+      showToast("Could not update wishlist", "error");
+    } finally {
+      setToggling(false);
     }
   };
 
@@ -54,7 +103,8 @@ export default function ProductCard({ product }) {
           src={optimizeImage(product.images?.[0])}
           alt={product.title}
           loading="lazy"
-          className={`w-full h-full object-cover ${isSoldOut ? 'grayscale opacity-70' : ''}`}
+          onError={e => { e.currentTarget.style.display = "none"; }}
+          className={`w-full h-full object-cover ${isSoldOut ? "grayscale opacity-70" : ""}`}
         />
 
         {/* Overlay Badges */}
@@ -73,7 +123,10 @@ export default function ProductCard({ product }) {
 
         {/* HOVER ACTION: Quick View (Slides up) */}
         <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-20">
-          <button className="w-full py-2.5 bg-white/90 backdrop-blur text-primary rounded-xl font-clash font-bold text-xs uppercase shadow-lg flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-colors">
+          <button
+            onClick={e => { e.stopPropagation(); navigate(`/product/${product.id}`); }}
+            className="w-full py-2.5 bg-white/90 backdrop-blur text-primary rounded-xl font-clash font-bold text-xs uppercase shadow-lg flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-colors"
+          >
             <Zap size={14} /> Quick View
           </button>
         </div>
@@ -86,6 +139,26 @@ export default function ProductCard({ product }) {
             </span>
           </div>
         )}
+
+        {/* Inline toast */}
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              className={`absolute bottom-14 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 rounded-full text-[10px] font-clash font-bold uppercase whitespace-nowrap shadow-lg pointer-events-none ${
+                toast.type === "error"
+                  ? "bg-red-500 text-white"
+                  : toast.type === "remove"
+                  ? "bg-gray-700 text-white"
+                  : "bg-primary text-accent"
+              }`}
+            >
+              {toast.msg}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* 2. MINIMAL DETAILS (Below Image) */}
@@ -95,7 +168,7 @@ export default function ProductCard({ product }) {
             {product.title}
           </h3>
           <span className="text-sm font-clash font-black text-primary whitespace-nowrap">
-            ₹{product.price}
+            ₹{product.price?.toLocaleString()}
           </span>
         </div>
 
@@ -103,12 +176,22 @@ export default function ProductCard({ product }) {
           <p className="text-[10px] font-bold text-primary/40 uppercase tracking-wider">
             {product.collection || "Clan Drop"}
           </p>
-          {/* Subtle Heart that appears on hover */}
+          {/* Heart — filled when wishlisted, always visible when wishlisted */}
           <button
             onClick={toggleWishlist}
-            className="text-primary/20 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+            disabled={toggling}
+            aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            className={`transition-all duration-200 disabled:cursor-not-allowed ${
+              wishlisted
+                ? "text-red-500 opacity-100"
+                : "text-primary/20 hover:text-red-500 opacity-0 group-hover:opacity-100"
+            }`}
           >
-            <Heart size={14} />
+            <Heart
+              size={14}
+              fill={wishlisted ? "currentColor" : "none"}
+              className={toggling ? "animate-pulse" : ""}
+            />
           </button>
         </div>
       </div>

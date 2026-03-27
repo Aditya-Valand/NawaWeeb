@@ -60,14 +60,16 @@ function App() {
       <ScrollToTop />
       <Suspense fallback={<PageLoader />}>
         <Routes>
+          {/* --- AUTH ROUTES — rendered WITHOUT Navbar/Footer for a clean experience --- */}
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+
           {/* --- PUBLIC CLAN ROUTES ---
               Wrapped in HomeLayout for consistent Navbar/Footer */}
           <Route path="/" element={<HomeLayout />}>
             <Route index element={<Shop />} />
             <Route path="product/:id" element={<ProductDetail />} />
-            <Route path="auth" element={<Auth />} />
-            <Route path="forgot-password" element={<ForgotPassword />} />
-            <Route path="reset-password/:token" element={<ResetPassword />} />
             <Route path="cart" element={<Cart />} />
             <Route path="checkout" element={<Checkout />} />
             <Route path="order-success" element={<OrderSuccess />} />

@@ -41,18 +41,25 @@ export default function NawaweebNavbar() {
   useEffect(() => {
     const fetchMenuData = async () => {
       try {
-        // Fetch all active products
         const res = await api.get('/products');
         const allProducts = res.data.data?.products || [];
 
-        // 1. New Drops: Get Top 5 Latest (assuming backend sorts by newest)
-        const latestDrops = allProducts.slice(0, 5).map(p => p.title);
-        setDynamicDrops(latestDrops);
+        // New Drops: top 5 latest → link directly to each product detail page
+        setDynamicDrops(
+          allProducts.slice(0, 5).map(p => ({
+            label: p.title,
+            route: `/product/${p.id}`
+          }))
+        );
 
-        // 2. Collections: Extract Unique Collection Names
+        // Collections: unique collection names → filter shop by collection
         const uniqueCollections = [...new Set(allProducts.map(p => p.collection))].filter(Boolean);
-        setDynamicCollections(uniqueCollections);
-
+        setDynamicCollections(
+          uniqueCollections.map(c => ({
+            label: c,
+            route: `/?filter=${encodeURIComponent(c)}`
+          }))
+        );
       } catch (err) {
         console.error("Menu fetch failed:", err);
       }
@@ -82,33 +89,41 @@ export default function NawaweebNavbar() {
   };
 
   // --- NAVIGATION CONFIGURATION ---
+  // All submenu items are { label, route } so every link is wired up
   const NAV = [
-    { 
-      name: "New Drops", 
-      icon: Sparkles, 
-      badge: "New", 
-      submenu: dynamicDrops.length > 0 ? dynamicDrops : ["Loading Artifacts..."] 
+    {
+      name: "New Drops",
+      icon: Sparkles,
+      badge: "New",
+      submenu: dynamicDrops.length > 0
+        ? dynamicDrops
+        : [{ label: "Loading...", route: null }]
     },
-    { 
-      name: "Collections", 
-      icon: Crown, 
-      submenu: dynamicCollections.length > 0 ? dynamicCollections : ["General Release"] 
+    {
+      name: "Collections",
+      icon: Crown,
+      submenu: dynamicCollections.length > 0
+        ? dynamicCollections
+        : [{ label: "All Drops", route: "/" }]
     },
-    { 
-      name: "Apparel", 
+    {
+      name: "Apparel",
       submenu: [
-        "Anime Tees", 
-        "Divine Drip",   // Devote Tees
-        "Festival Fits", // Festival Tees
-        "Trendsetters",  // Trends Tees
-        "Kimono Shirts"
-      ] 
+        { label: "Anime Tees",    route: "/?filter=Anime+Tees" },
+        { label: "Divine Drip",   route: "/?filter=Divine+Drip" },
+        { label: "Festival Fits", route: "/?filter=Festival+Fits" },
+        { label: "Trendsetters",  route: "/?filter=Trendsetters" },
+        { label: "Kimono Shirts", route: "/?filter=Kimono+Shirts" },
+      ]
     },
-    { 
-      name: "The Clan", 
-      icon: Flame, 
-      badge: "Hot", 
-      submenu: ["Our Story", "Contact"] 
+    {
+      name: "The Clan",
+      icon: Flame,
+      badge: "Hot",
+      submenu: [
+        { label: "Our Story", route: "/ourstory" },
+        { label: "Contact",   route: "/contact" },
+      ]
     },
   ];
 
@@ -205,22 +220,15 @@ export default function NawaweebNavbar() {
                         <div className="p-2">
                           {item.submenu.map((subItem) => (
                             <button
-                              key={subItem}
+                              key={subItem.label}
                               onClick={() => {
-                                // Special handling for Our Story and Contact
-                                if (subItem === "Our Story") {
-                                  navigate("/ourstory");
-                                } else if (subItem === "Contact") {
-                                  navigate("/contact");
-                                } else {
-                                  // Shop lives at "/" — filters are query params on the index route
-                                  navigate(`/?filter=${encodeURIComponent(subItem)}`);
-                                }
+                                if (subItem.route) navigate(subItem.route);
                                 setActiveMenu(null);
                               }}
-                              className="w-full text-left block px-4 py-3 text-sm font-clash text-primary/70 hover:text-primary hover:bg-primary/5 rounded-xl transition uppercase"
+                              disabled={!subItem.route}
+                              className="w-full text-left block px-4 py-3 text-sm font-clash text-primary/70 hover:text-primary hover:bg-primary/5 rounded-xl transition uppercase disabled:opacity-40 disabled:cursor-default"
                             >
-                              {subItem}
+                              {subItem.label}
                             </button>
                           ))}
                         </div>
@@ -394,23 +402,17 @@ export default function NawaweebNavbar() {
                     {/* Mobile Submenu items */}
                     {item.submenu && (
                       <div className="pl-12 pr-4 space-y-2 mt-2 mb-4">
-                        {item.submenu.map((sub, idx) => (
+                        {item.submenu.map((sub) => (
                           <button
-                            key={idx}
+                            key={sub.label}
                             onClick={() => {
-                              // Special handling for Our Story and Contact
-                              if (sub === "Our Story") {
-                                navigate("/ourstory");
-                              } else if (sub === "Contact") {
-                                navigate("/contact");
-                              } else {
-                                navigate(`/?filter=${encodeURIComponent(sub)}`);
-                              }
+                              if (sub.route) navigate(sub.route);
                               setOpen(false);
                             }}
-                            className="block w-full text-left py-2 text-sm font-clash text-primary/60 hover:text-primary uppercase"
+                            disabled={!sub.route}
+                            className="block w-full text-left py-2 text-sm font-clash text-primary/60 hover:text-primary uppercase disabled:opacity-40 disabled:cursor-default"
                           >
-                            {sub}
+                            {sub.label}
                           </button>
                         ))}
                       </div>
