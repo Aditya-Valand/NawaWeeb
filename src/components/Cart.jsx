@@ -132,7 +132,7 @@ export default function Cart() {
                     The spirits are waiting. Manifest some drip.
                 </p>
                 <button
-                    onClick={() => navigate("/shop")}
+                    onClick={() => navigate("/")}
                     className="px-10 py-4 bg-black text-white rounded-full font-clash font-bold uppercase tracking-widest hover:scale-105 transition-transform shadow-2xl"
                 >
                     Summon Artifacts

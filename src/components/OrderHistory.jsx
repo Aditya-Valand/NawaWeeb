@@ -16,7 +16,10 @@ export default function OrderHistory() {
         const fetchOrders = async () => {
             try {
                 const token = localStorage.getItem("token");
-                if (!token) return;
+                if (!token) {
+                    navigate("/auth");
+                    return;
+                }
 
                 const res = await api.get('/orders');
                 setOrders(res.data.orders || []);
@@ -112,7 +115,7 @@ export default function OrderHistory() {
                         <div className="p-12 border-2 border-dashed border-gray-200 rounded-[2rem] text-center">
                             <Package size={48} className="mx-auto text-gray-300 mb-4" />
                             <h3 className="font-clash font-bold text-xl uppercase text-gray-400">No Missions on Record</h3>
-                            <button onClick={() => navigate("/shop")} className="mt-6 text-sm font-bold uppercase border-b border-black">
+                            <button onClick={() => navigate("/")} className="mt-6 text-sm font-bold uppercase border-b border-black">
                                 Start a New Mission
                             </button>
                         </div>
@@ -198,7 +201,10 @@ export default function OrderHistory() {
                                         <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                             <MapPin size={14} /> Shipping to {order.city || "Headquarters"}
                                         </div>
-                                        <button className="flex items-center gap-2 text-xs font-clash font-bold uppercase hover:text-[#FFD700] transition-colors">
+                                        <button
+                                            onClick={() => navigate(`/orders`)}
+                                            className="flex items-center gap-2 text-xs font-clash font-bold uppercase hover:text-[#FFD700] transition-colors"
+                                        >
                                             Track Signal <ExternalLink size={14} />
                                         </button>
                                     </div>

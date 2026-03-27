@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Private routes — no SEO value
+Disallow: /admin
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /order-success
+Disallow: /orders
+Disallow: /reset-password
+
+Sitemap: https://nawaweeb.com/sitemap.xml

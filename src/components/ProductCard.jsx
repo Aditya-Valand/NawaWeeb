@@ -4,6 +4,15 @@ import { motion } from "framer-motion";
 import { Zap, Heart } from "lucide-react";
 import api from "../api/axios";
 
+// Append Cloudinary auto-optimization params if the URL is from Cloudinary
+function optimizeImage(url) {
+  if (!url) return url;
+  if (url.includes("res.cloudinary.com") && url.includes("/upload/")) {
+    return url.replace("/upload/", "/upload/f_auto,q_auto/");
+  }
+  return url;
+}
+
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
 
@@ -42,8 +51,9 @@ export default function ProductCard({ product }) {
         <motion.img
           whileHover={{ scale: 1.05 }}
           transition={{ duration: 0.5 }}
-          src={product.images?.[0]}
+          src={optimizeImage(product.images?.[0])}
           alt={product.title}
+          loading="lazy"
           className={`w-full h-full object-cover ${isSoldOut ? 'grayscale opacity-70' : ''}`}
         />
 

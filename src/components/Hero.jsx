@@ -206,7 +206,7 @@ export default function Hero() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate("/shop")}
+                onClick={() => navigate("/")}
                 className="w-full sm:w-auto px-10 py-4 bg-primary text-white rounded-full shadow-2xl shadow-primary/20 flex items-center justify-center gap-3 group font-clash font-bold tracking-wider uppercase text-sm"
               >
                 View Collection

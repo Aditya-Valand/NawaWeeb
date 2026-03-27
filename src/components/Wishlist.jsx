@@ -19,10 +19,7 @@ export default function Wishlist() {
         try {
             const token = localStorage.getItem("token");
             if (!token) {
-                // Redirect to auth if not logged in? Or show empty?
-                // Let's just show empty for now or redirect
-                // navigate("/auth");
-                setLoading(false);
+                navigate("/auth");
                 return;
             }
 
@@ -36,15 +33,14 @@ export default function Wishlist() {
     };
 
     const removeFromWishlist = async (productId) => {
+        const prevWishlist = [...wishlist];
+        // Optimistic UI Update
+        setWishlist(prev => prev.filter(item => item.products.id !== productId));
         try {
-            const token = localStorage.getItem("token");
-            // Optimistic UI Update
-            setWishlist(prev => prev.filter(item => item.products.id !== productId));
-
             await api.post('/user/togglewish', { productId });
         } catch (err) {
             console.error("Failed to sever bond", err);
-            // Revert if needed? Ideally yes, but complex.
+            setWishlist(prevWishlist); // Revert on server error
         }
     };
 
@@ -75,7 +71,7 @@ export default function Wishlist() {
                     <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
                         <Ghost size={80} strokeWidth={1} />
                         <p className="font-clash font-bold text-xl mt-4 uppercase">Your Spirit is Hollow</p>
-                        <button onClick={() => navigate("/shop")} className="mt-6 border-b-2 border-black font-bold uppercase hover:text-accent-dark transition-colors">
+                        <button onClick={() => navigate("/")} className="mt-6 border-b-2 border-black font-bold uppercase hover:text-accent-dark transition-colors">
                             Find Connections
                         </button>
                     </div>

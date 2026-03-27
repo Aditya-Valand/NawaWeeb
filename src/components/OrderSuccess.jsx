@@ -10,7 +10,7 @@ export default function OrderSuccess() {
 
   useEffect(() => {
     if (!orderId) {
-      navigate("/shop");
+      navigate("/");
     }
   }, [orderId, navigate]);
 
@@ -216,7 +216,7 @@ export default function OrderSuccess() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/shop")}
+            onClick={() => navigate("/")}
             className="py-4 px-6 bg-white text-black border-2 border-black rounded-xl font-clash font-bold uppercase tracking-wide hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2"
           >
             Continue Shopping

@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import img1 from "../assets/Rumi-darwaza.jpg";
 import { Sparkles, Globe, Shield, Zap } from "lucide-react";
@@ -25,6 +26,17 @@ export default function OurStory() {
   };
 
   return (
+    <>
+      <Helmet>
+        <title>Our Story — Nawaweeb | Born in Lucknow</title>
+        <meta name="description" content="Nawaweeb was born in the historic lanes of Lucknow. Discover how we fuse Nawabi heritage, Chikankari craft, and anime-inspired minimalism into legendary streetwear." />
+        <meta name="keywords" content="nawaweeb story, lucknow streetwear brand, chikankari fashion, anime clothing brand india, nawabi heritage fashion" />
+        <link rel="canonical" href="https://nawaweeb.com/ourstory" />
+        <meta property="og:title" content="Our Story — Nawaweeb | Born in Lucknow" />
+        <meta property="og:description" content="From the historic lanes of Lucknow — where Nawabi royalty meets anime minimalism. This is Nawaweeb." />
+        <meta property="og:url" content="https://nawaweeb.com/ourstory" />
+        <meta property="og:type" content="website" />
+      </Helmet>
     <section className="bg-gradient-to-br from-slate-900 via-gray-900 to-gray-950 py-24 px-6 overflow-hidden relative min-h-screen">
       {/* Minimal Clean Background Elements */}
       <div className="absolute top-20 right-[-10%] w-96 h-96 bg-white/5 blur-[120px] rounded-full" />
@@ -172,5 +184,6 @@ export default function OurStory() {
 
       </div>
     </section>
+    </>
   );
 }

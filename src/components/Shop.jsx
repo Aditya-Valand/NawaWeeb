@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
 import { useSearchParams } from "react-router-dom";
 import Hero from "./Hero";
@@ -44,8 +45,28 @@ export default function Shop() {
     setFilteredProducts(filtered);
   }, [activeFilter, products]);
 
+  const pageTitle = activeFilter
+    ? `${activeFilter} Collection — Nawaweeb`
+    : "Nawaweeb — Anime-Inspired Streetwear from Lucknow";
+
+  const pageDescription = activeFilter
+    ? `Shop the ${activeFilter} collection from Nawaweeb. Limited drops, handcrafted Chikankari streetwear.`
+    : "Discover Nawaweeb's latest drops — anime-inspired streetwear born in Lucknow. Limited edition oversized fits, handcrafted Chikankari embroidery, clan-exclusive pieces.";
+
   return (
     <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta name="keywords" content="nawaweeb, anime streetwear, lucknow fashion, chikankari clothing, limited edition drops, oversized t-shirts india" />
+        <link rel="canonical" href={`https://nawaweeb.com${activeFilter ? `/?filter=${activeFilter}` : "/"}`} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content="https://nawaweeb.com/" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+      </Helmet>
       <Hero />
       <HypeBanner />
       <section className="py-12 px-4 sm:px-8 max-w-screen-2xl mx-auto">

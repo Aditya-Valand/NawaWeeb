@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Send, MapPin, Mail, Phone, Zap, ShieldCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext"; //
@@ -25,9 +26,20 @@ export default function Contact() {
   };
 
   return (
-    <motion.section 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
+    <>
+      <Helmet>
+        <title>Contact Us — Nawaweeb | Summon the Artisans</title>
+        <meta name="description" content="Get in touch with the Nawaweeb syndicate. Custom orders, collaborations, or just saying hey — we respond within 24 hours from Lucknow, India." />
+        <meta name="keywords" content="nawaweeb contact, custom order anime clothing, lucknow fashion brand contact, nawaweeb support" />
+        <link rel="canonical" href="https://nawaweeb.com/contact" />
+        <meta property="og:title" content="Contact Nawaweeb — Summon the Artisans" />
+        <meta property="og:description" content="Reach out to Nawaweeb for custom orders, collaborations, or inquiries. Based in Lucknow, India." />
+        <meta property="og:url" content="https://nawaweeb.com/contact" />
+        <meta property="og:type" content="website" />
+      </Helmet>
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       className="min-h-screen bg-bg-light pt-32 pb-20 px-6 sm:px-12"
     >
       <div className="max-w-7xl mx-auto">
@@ -150,5 +162,6 @@ export default function Contact() {
         </div>
       </div>
     </motion.section>
+    </>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import {
@@ -48,58 +49,78 @@ export default function ProductDetail() {
     if (isAdding) return;
     setIsAdding(true);
 
-    const baseItemPrice = selectedVariant?.price || product.price;
-    const actualPrice = isHandmade ? Math.round(baseItemPrice * 1.5) : baseItemPrice;
+    try {
+      const baseItemPrice = selectedVariant?.price || product.price;
+      const actualPrice = isHandmade ? Math.round(baseItemPrice * 1.5) : baseItemPrice;
 
-    const cartItem = {
-      productId: product.id,
-      variantId: selectedVariant?.id,
-      title: product.title,
-      image: product.images[0],
-      size: selectedVariant?.size,
-      qty: quantity,
-      price: actualPrice,
-      isHandmade: isHandmade
-    };
+      const cartItem = {
+        productId: product.id,
+        variantId: selectedVariant?.id,
+        title: product.title,
+        image: product.images[0],
+        size: selectedVariant?.size,
+        qty: quantity,
+        price: actualPrice,
+        isHandmade: isHandmade
+      };
 
-    const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token");
 
-    // For authenticated users, always use the server cart as the source of truth.
-    // Using localStorage here causes stale data from old sessions to corrupt the sync.
-    let existingCart;
-    if (token) {
-      try {
-        // Authorization header automatically added by axios interceptor
-        const res = await api.get("/user/cart");
-        existingCart = (res.data.success && Array.isArray(res.data.cart)) ? res.data.cart : [];
-      } catch {
-        existingCart = [];
+      // For authenticated users, always use the server cart as the source of truth.
+      // Using localStorage here causes stale data from old sessions to corrupt the sync.
+      let existingCart;
+      if (token) {
+        try {
+          const res = await api.get("/user/cart");
+          existingCart = (res.data.success && Array.isArray(res.data.cart)) ? res.data.cart : [];
+        } catch {
+          existingCart = [];
+        }
+      } else {
+        existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
       }
-    } else {
-      existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+      const existingIndex = existingCart.findIndex(
+        i => i.productId === cartItem.productId &&
+             i.variantId === cartItem.variantId &&
+             i.isHandmade === cartItem.isHandmade
+      );
+
+      const updatedCart = existingIndex > -1
+        ? existingCart.map((item, i) =>
+            i === existingIndex ? { ...item, qty: item.qty + cartItem.qty } : item
+          )
+        : [...existingCart, cartItem];
+
+      localStorage.setItem("cart", JSON.stringify(updatedCart));
+      // Notify Navbar in the same tab so the cart badge updates immediately
+      window.dispatchEvent(new Event("storage"));
+
+      if (token) {
+        await api.post("/user/cart/sync", {
+          localCart: updatedCart
+        }).catch(err => console.error("Sync failed", err));
+      }
+      navigate("/cart");
+    } catch (err) {
+      console.error("Failed to add to cart", err);
+    } finally {
+      setIsAdding(false);
     }
+  };
 
-    const existingIndex = existingCart.findIndex(
-      i => i.productId === cartItem.productId &&
-           i.variantId === cartItem.variantId &&
-           i.isHandmade === cartItem.isHandmade
-    );
-
-    const updatedCart = existingIndex > -1
-      ? existingCart.map((item, i) =>
-          i === existingIndex ? { ...item, qty: item.qty + cartItem.qty } : item
-        )
-      : [...existingCart, cartItem];
-
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-
-    if (token) {
-      // Authorization header automatically added by axios interceptor
-      await api.post("/user/cart/sync", {
-        localCart: updatedCart
-      }).catch(err => console.error("Sync failed", err));
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/product/${id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: product.title, text: product.description, url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        alert("Link copied to clipboard!");
+      }
+    } catch (err) {
+      if (err.name !== "AbortError") console.error("Share failed", err);
     }
-    navigate("/cart");
   };
 
   const toggleWishlist = async () => {
@@ -126,7 +147,47 @@ export default function ProductDetail() {
   const finalPrice = isHandmade ? Math.round(basePrice * 1.5) : basePrice;
   const currentStock = selectedVariant?.stock_quantity || 0;
 
+  const productUrl = `https://nawaweeb.com/product/${id}`;
+  const productImage = product.images?.[0] || "";
+  const availability = currentStock > 0
+    ? "https://schema.org/InStock"
+    : "https://schema.org/OutOfStock";
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    image: product.images,
+    description: product.description,
+    brand: { "@type": "Brand", name: "Nawaweeb" },
+    url: productUrl,
+    offers: {
+      "@type": "Offer",
+      price: finalPrice,
+      priceCurrency: "INR",
+      availability,
+      url: productUrl,
+    },
+  };
+
   return (
+    <>
+      <Helmet>
+        <title>{`${product.title} — Nawaweeb`}</title>
+        <meta name="description" content={`${product.description} Shop ${product.title} from Nawaweeb. ${currentStock > 0 ? "In stock" : "Sold out"}.`} />
+        <meta name="keywords" content={`${product.title}, nawaweeb, ${product.collection || "streetwear"}, anime clothing india, limited drop`} />
+        <link rel="canonical" href={productUrl} />
+        <meta property="og:title" content={`${product.title} — Nawaweeb`} />
+        <meta property="og:description" content={product.description} />
+        <meta property="og:image" content={productImage} />
+        <meta property="og:url" content={productUrl} />
+        <meta property="og:type" content="product" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${product.title} — Nawaweeb`} />
+        <meta name="twitter:description" content={product.description} />
+        <meta name="twitter:image" content={productImage} />
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-[#FAFAFA] pt-24 lg:pt-32 pb-12 px-4 lg:px-12">
       <div className="max-w-7xl mx-auto">
 
@@ -174,7 +235,11 @@ export default function ProductDetail() {
 
               {/* Floating Action (Share) */}
               <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <button className="p-2.5 bg-white/90 backdrop-blur rounded-full shadow-sm hover:bg-primary hover:text-white transition-colors">
+                <button
+                  onClick={handleShare}
+                  className="p-2.5 bg-white/90 backdrop-blur rounded-full shadow-sm hover:bg-primary hover:text-white transition-colors"
+                  aria-label="Share product"
+                >
                   <Share2 size={18} />
                 </button>
               </div>
@@ -188,7 +253,7 @@ export default function ProductDetail() {
                   onClick={() => setCurrentImage(i)}
                   className={`relative w-14 h-14 rounded-2xl overflow-hidden transition-all duration-300 ${currentImage === i ? 'ring-2 ring-primary ring-offset-2 scale-110' : 'opacity-50 hover:opacity-100 hover:scale-105'}`}
                 >
-                  <img src={img} className="w-full h-full object-cover" />
+                  <img src={img} alt={`${product.title} view ${i + 1}`} loading="lazy" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -320,5 +385,6 @@ export default function ProductDetail() {
         </div>
       </div>
     </motion.div>
+    </>
   );
 }

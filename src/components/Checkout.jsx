@@ -7,18 +7,32 @@ import api from "../api/axios";
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
 
-  // Form State
+  // Redirect guests to login — wait for auth check to complete first
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate("/auth");
+    }
+  }, [isAuthenticated, authLoading, navigate]);
+
+  // Form State — email starts empty; populated via useEffect once user loads
   const [formData, setFormData] = useState({
     fullName: "",
-    email: isAuthenticated ? user?.email || "" : "",
+    email: "",
     phone: "",
     street: "",
     city: "",
     state: "",
     pincode: ""
   });
+
+  // Pre-fill email when the authenticated user object becomes available
+  useEffect(() => {
+    if (user?.email) {
+      setFormData(prev => ({ ...prev, email: prev.email || user.email }));
+    }
+  }, [user]);
 
   // Checkout State
   const [cartItems, setCartItems] = useState([]);
@@ -570,7 +584,7 @@ export default function Checkout() {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate("/shop")}
+                      onClick={() => navigate("/")}
                       className="px-6 py-3 bg-black text-white rounded-lg font-clash font-bold uppercase"
                     >
                       Back to Shop

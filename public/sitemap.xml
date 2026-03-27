@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <url>
+    <loc>https://nawaweeb.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>https://nawaweeb.com/ourstory</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://nawaweeb.com/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://nawaweeb.com/product/5f1f8bc1-1568-4777-82fb-c4929855db09</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dmvzs4yy3/image/upload/v1774288985/wcrzrfk2rumsb1grgokd.png</image:loc>
+      <image:title>Dark Entity Oversized Anime T-Shirt</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://nawaweeb.com/product/6809c85f-2957-4112-ade9-33b51bc5b023</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dmvzs4yy3/image/upload/v1771752328/kwtzr1gr0nkjaaaie5ms.jpg</image:loc>
+      <image:title>LIMITLESS — Heavenly Rebel Oversized Tee</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://nawaweeb.com/product/6b70aeae-dba0-4802-b71e-6411c67f19cf</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dmvzs4yy3/image/upload/v1771097324/librkehpmftptymynuif.jpg</image:loc>
+      <image:title>dsfdfdsfds</image:title>
+    </image:image>
+  </url>
+
+</urlset>
