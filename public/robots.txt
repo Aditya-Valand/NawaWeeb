@@ -8,5 +8,8 @@ Disallow: /checkout
 Disallow: /order-success
 Disallow: /orders
 Disallow: /reset-password
+Disallow: /auth
+Disallow: /cart
+Disallow: /wishlist
 
 Sitemap: https://nawaweeb.com/sitemap.xml

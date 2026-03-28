@@ -64,8 +64,49 @@ export default function Shop() {
         <meta property="og:description" content={pageDescription} />
         <meta property="og:url" content="https://nawaweeb.com/" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://nawaweeb.com/og-cover.jpg" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content="https://nawaweeb.com/og-cover.jpg" />
+        {!activeFilter && (
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Nawaweeb",
+            "url": "https://nawaweeb.com",
+            "logo": "https://nawaweeb.com/favicon.png",
+            "description": "Anime-inspired streetwear brand from Lucknow. Limited drops, handcrafted Chikankari embroidery, clan-exclusive pieces.",
+            "foundingLocation": {
+              "@type": "Place",
+              "name": "Lucknow, Uttar Pradesh, India"
+            },
+            "sameAs": [
+              "https://www.instagram.com/nawaweeb",
+              "https://www.youtube.com/@nawaweeb"
+            ],
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer service",
+              "availableLanguage": ["English", "Hindi"]
+            }
+          })}</script>
+        )}
+        {!activeFilter && (
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Nawaweeb",
+            "url": "https://nawaweeb.com",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://nawaweeb.com/?filter={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          })}</script>
+        )}
       </Helmet>
       <Hero />
       <HypeBanner />
