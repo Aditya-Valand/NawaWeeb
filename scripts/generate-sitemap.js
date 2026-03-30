@@ -12,7 +12,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const BASE_URL = "https://nawaweeb.com";
+const BASE_URL = "https://www.nawaweeb.in";
 const API_URL = "https://backend-1089363263041.us-central1.run.app/api";
 const OUTPUT = join(__dirname, "../public/sitemap.xml");
 
