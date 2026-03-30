@@ -1,0 +1,16 @@
+<svg width="400" height="100" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @import url('https://api.fontshare.com/v2/css?f[]=clash-display@700,900&display=swap');
+    text {
+      font-family: 'Clash Display', sans-serif;
+      font-weight: 900;
+    }
+  </style>
+  <text
+    x="50%"
+    y="68"
+    text-anchor="middle"
+    font-size="52"
+    letter-spacing="-4.7"
+    fill="#000000">NAWAWEEB</text>
+</svg>

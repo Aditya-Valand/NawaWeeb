@@ -175,9 +175,7 @@ export default function NawaweebNavbar() {
                 <span className="text-2xl md:text-4xl font-clash font-black tracking-tighter text-primary leading-none">
                   NAWAWEEB
                 </span>
-                <span className="text-[10px] md:text-[12px] font-clash font-bold tracking-[0.4em] text-accent-dark uppercase block">
-                  Anime × Chikankari
-                </span>
+                
               </motion.button>
             </div>
 
